@@ -1,0 +1,20 @@
+chartflam/
+├─ info/
+│  ├─ dev1.png
+│  ├─ picflam-styleguide.md
+│  ├─ promptflam-styleguide.md
+│  ├─ wire-bar-csv.png
+│  ├─ wire-bar-manual.png
+│  ├─ wire-pictogram.png
+│  ├─ wire-pie-colour.png
+│  ├─ wire-pie-csv.png
+│  └─ wire-pie-manual.png
+├─ public/
+├─ .gitignore
+├─ app.js
+├─ chartflam-icon-maskable.png
+├─ chartflam-icon.png
+├─ chartflam-logo.png
+├─ filetree
+├─ index.html
+└─ styles.css
