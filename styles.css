@@ -128,7 +128,7 @@ body {
 .chart-selector-container {
   background-color: var(--white);
   border-radius: var(--radius-lg);
-  padding: var(--spacing-md);
+  padding: var(--spacing-sm);
   margin-bottom: var(--spacing-md);
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
 }
@@ -141,34 +141,30 @@ body {
 }
 
 .chart-icon {
-  width: 56px;
-  height: 56px;
-  background-color: var(--bg-light);
-  border: 2px solid transparent;
-  border-radius: var(--radius-round);
+  width: 80px;
+  height: 80px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   transition: all 0.3s ease;
-  color: var(--text-medium);
+  color: #555555;
   padding: 0;
+  background-color: transparent;
+  border: none;
 }
 
 .chart-icon:hover {
-  background-color: var(--bg-medium);
   transform: scale(1.05);
 }
 
 .chart-icon.active {
-  background-color: var(--favourite-active);
-  color: var(--white);
-  border-color: var(--favourite-active);
+  color: #333333;
 }
 
 .chart-icon svg {
-  width: 24px;
-  height: 24px;
+  width: 36px;
+  height: 36px;
 }
 
 /* ============================================
@@ -204,8 +200,7 @@ body {
 }
 
 #chart-canvas {
-  max-width: 100%;
-  height: auto;
+max-width: 100%;
 }
 
 .chart-caption {
@@ -509,6 +504,7 @@ input[type="range"] {
   background: var(--bg-medium);
   outline: none;
   -webkit-appearance: none;
+  appearance: none;
 }
 
 input[type="range"]::-webkit-slider-thumb {
@@ -605,13 +601,13 @@ input[type="range"]::-moz-range-thumb:hover {
   }
   
   .chart-icon {
-    width: 48px;
-    height: 48px;
+    width: 70px;
+    height: 70px;
   }
-  
+
   .chart-icon svg {
-    width: 20px;
-    height: 20px;
+    width: 32px;
+    height: 32px;
   }
   
   .chart-title {
@@ -710,50 +706,7 @@ input[type="range"]::-moz-range-thumb:hover {
   background-color: var(--copy-active);
 }
 
-/* ============================================
-   HISTORY CONTROLS (UNDO/REDO)
-   ============================================ */
-.history-controls {
-  display: flex;
-  gap: var(--spacing-xs);
-  margin-top: var(--spacing-sm);
-  justify-content: center;
-}
 
-.btn-icon {
-  width: 40px;
-  height: 40px;
-  background-color: var(--bg-light);
-  border: 2px solid var(--bg-medium);
-  border-radius: var(--radius-sm);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  color: var(--text-dark);
-  padding: 0;
-}
-
-.btn-icon:hover:not(:disabled) {
-  background-color: var(--bg-medium);
-  border-color: var(--text-medium);
-  transform: translateY(-1px);
-}
-
-.btn-icon:active:not(:disabled) {
-  transform: translateY(0);
-}
-
-.btn-icon:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-.btn-icon svg {
-  width: 20px;
-  height: 20px;
-}
 
 /* ============================================
    INPUT VALIDATION STATES
@@ -836,14 +789,10 @@ button[aria-busy="true"]::after {
 
 /* High contrast mode support */
 @media (prefers-contrast: high) {
-  .chart-icon {
-    border-width: 3px;
-  }
-  
   .btn-icon {
     border-width: 3px;
   }
-  
+
   input,
   textarea {
     border-width: 2px;

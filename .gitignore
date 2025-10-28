@@ -23,3 +23,8 @@ npm-debug.log*
 # Temporary files
 *.tmp
 *.swp
+
+# Project specific
+filetree.txt
+info/
+

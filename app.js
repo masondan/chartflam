@@ -20,10 +20,7 @@ const state = {
   chartBackgroundColor: '#FFFFFF',
   smoothingValue: 0,
   chart: null,
-  isProcessing: false,
-  history: [],
-  historyIndex: -1,
-  maxHistorySize: 50
+  isProcessing: false
 };
 
 // ============================================
@@ -114,95 +111,7 @@ function validateText(text, maxLength, fieldName = 'Text') {
   return { valid: true, value: text.trim() };
 }
 
-// Save state to history for undo/redo
-function saveStateToHistory() {
-  // Remove any states after current index (when user made changes after undo)
-  state.history = state.history.slice(0, state.historyIndex + 1);
-  
-  // Create a deep copy of current state
-  const stateCopy = {
-    chartType: state.currentChartType,
-    data: JSON.parse(JSON.stringify(state.chartData)),
-    title: state.chartTitle,
-    caption: state.chartCaption,
-    bgColor: state.chartBackgroundColor,
-    smoothing: state.smoothingValue
-  };
-  
-  state.history.push(stateCopy);
-  state.historyIndex++;
-  
-  // Limit history size
-  if (state.history.length > state.maxHistorySize) {
-    state.history.shift();
-    state.historyIndex--;
-  }
-  
-  updateUndoRedoButtons();
-}
 
-// Restore state from history
-function restoreState(historyState) {
-  state.currentChartType = historyState.chartType;
-  state.chartData = JSON.parse(JSON.stringify(historyState.data));
-  state.chartTitle = historyState.title;
-  state.chartCaption = historyState.caption;
-  state.chartBackgroundColor = historyState.bgColor;
-  state.smoothingValue = historyState.smoothing;
-  
-  // Update UI
-  document.getElementById('title-input').value = state.chartTitle;
-  document.getElementById('caption-input').value = state.chartCaption;
-  document.getElementById('bg-color').value = state.chartBackgroundColor;
-  document.getElementById('smoothing-slider').value = state.smoothingValue;
-  document.getElementById('smoothing-value').textContent = state.smoothingValue;
-  
-  // Update chart type selector
-  document.querySelectorAll('.chart-icon').forEach(icon => {
-    icon.classList.remove('active');
-  });
-  document.querySelector(`[data-chart="${state.currentChartType}"]`)?.classList.add('active');
-  
-  // Re-render
-  initManualInput();
-  initColorControls();
-  renderChart();
-  updateSmoothingVisibility();
-}
-
-// Undo last action
-function undo() {
-  if (state.historyIndex > 0) {
-    state.historyIndex--;
-    restoreState(state.history[state.historyIndex]);
-    showFeedback('Undo successful', 'success');
-  }
-}
-
-// Redo last undone action
-function redo() {
-  if (state.historyIndex < state.history.length - 1) {
-    state.historyIndex++;
-    restoreState(state.history[state.historyIndex]);
-    showFeedback('Redo successful', 'success');
-  }
-}
-
-// Update undo/redo button states
-function updateUndoRedoButtons() {
-  const undoBtn = document.getElementById('undo-btn');
-  const redoBtn = document.getElementById('redo-btn');
-  
-  if (undoBtn) {
-    undoBtn.disabled = state.historyIndex <= 0;
-    undoBtn.setAttribute('aria-disabled', state.historyIndex <= 0);
-  }
-  
-  if (redoBtn) {
-    redoBtn.disabled = state.historyIndex >= state.history.length - 1;
-    redoBtn.setAttribute('aria-disabled', state.historyIndex >= state.history.length - 1);
-  }
-}
 
 // Set processing state
 function setProcessing(isProcessing) {
@@ -271,23 +180,7 @@ function startApp() {
             ${getSVGIcon('pictogram')}
           </button>
         </div>
-        
-        <!-- Undo/Redo Controls -->
-        <div class="history-controls">
-          <button id="undo-btn" class="btn-icon" title="Undo (Ctrl/Cmd + Z)" aria-label="Undo last action" disabled>
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M3 7v6h6"></path>
-              <path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"></path>
-            </svg>
-          </button>
-          <button id="redo-btn" class="btn-icon" title="Redo (Ctrl/Cmd + Shift + Z)" aria-label="Redo last action" disabled>
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M21 7v6h-6"></path>
-              <path d="M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3l3 2.7"></path>
-            </svg>
-          </button>
         </div>
-      </div>
 
       <!-- Chart Display Container -->
       <div class="chart-display-container" role="region" aria-label="Chart preview">
@@ -393,12 +286,14 @@ function startApp() {
     </div>
   `;
 
-  // Initialize components
-  initEventListeners();
-  initManualInput();
-  initColorControls();
-  renderChart();
-  updateSmoothingVisibility();
+  // Defer initialization to ensure the DOM is ready
+  setTimeout(() => {
+    initEventListeners();
+    initManualInput();
+    initColorControls();
+    updateSmoothingVisibility();
+    renderChart();
+  }, 0);
 }
 
 // ============================================
@@ -446,13 +341,11 @@ function initEventListeners() {
       return;
     }
     addManualRow();
-    saveStateToHistory();
   });
 
   // Apply CSV button
   document.getElementById('apply-csv-btn').addEventListener('click', () => {
     updateDataFromCSV();
-    saveStateToHistory();
   });
 
   // CSV textarea (with debouncing)
@@ -462,33 +355,25 @@ function initEventListeners() {
   // Background color
   document.getElementById('bg-color').addEventListener('change', () => {
     updateBackgroundColor();
-    saveStateToHistory();
   });
 
   // Smoothing slider
   const smoothingSlider = document.getElementById('smoothing-slider');
   smoothingSlider.addEventListener('input', debounce(() => {
     updateSmoothing();
-    saveStateToHistory();
   }, 100));
 
   // Title and caption (with debouncing)
   document.getElementById('title-input').addEventListener('input', debounce(() => {
     updateTitle();
-    saveStateToHistory();
   }, 300));
-  
+
   document.getElementById('caption-input').addEventListener('input', debounce(() => {
     updateCaption();
-    saveStateToHistory();
   }, 300));
 
   // Download button
   document.getElementById('download-btn').addEventListener('click', downloadChart);
-  
-  // Undo/Redo buttons
-  document.getElementById('undo-btn').addEventListener('click', undo);
-  document.getElementById('redo-btn').addEventListener('click', redo);
   
   // Global keyboard shortcuts
   document.addEventListener('keydown', handleKeyboardShortcuts);
@@ -502,9 +387,6 @@ function initEventListeners() {
       }
     });
   });
-  
-  // Save initial state to history
-  saveStateToHistory();
 }
 
 // Handle keyboard shortcuts
@@ -512,17 +394,7 @@ function handleKeyboardShortcuts(e) {
   const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
   const modifier = isMac ? e.metaKey : e.ctrlKey;
   
-  // Undo: Ctrl/Cmd + Z
-  if (modifier && e.key === 'z' && !e.shiftKey) {
-    e.preventDefault();
-    undo();
-  }
-  
-  // Redo: Ctrl/Cmd + Shift + Z or Ctrl/Cmd + Y
-  if (modifier && ((e.key === 'z' && e.shiftKey) || e.key === 'y')) {
-    e.preventDefault();
-    redo();
-  }
+
   
   // Download: Ctrl/Cmd + S
   if (modifier && e.key === 's') {
@@ -577,10 +449,7 @@ function selectChartType(type) {
   initColorControls();
   renderChart();
   updateSmoothingVisibility();
-  
-  // Save to history
-  saveStateToHistory();
-  
+
   // Announce change to screen readers
   showFeedback(`Switched to ${type} chart`, 'success');
 }
@@ -598,6 +467,12 @@ function renderChart() {
   }
 
   const ctx = canvas.getContext('2d');
+
+  // Set canvas size explicitly for Chart.js
+  const container = document.querySelector('.chart-canvas-container');
+  const width = Math.min(container.clientWidth, 400);
+  canvas.width = width;
+  canvas.height = width;
   
   // Destroy existing chart
   if (state.chart) {
@@ -605,13 +480,13 @@ function renderChart() {
   }
 
   // Chart configuration
+  let chartType = state.currentChartType === 'donut' ? 'doughnut' : state.currentChartType;
+  if (chartType === 'pictogram') chartType = 'pie';
   const config = {
-    type: state.currentChartType === 'donut' ? 'doughnut' : state.currentChartType,
+    type: chartType,
     data: state.chartData,
     options: {
-      responsive: true,
-      maintainAspectRatio: true,
-      aspectRatio: 1,
+      responsive: false,
       plugins: {
         legend: {
           position: 'bottom',
@@ -720,7 +595,6 @@ function addManualRow(label = '', value = '') {
     }
     row.remove();
     validateAndUpdateManualData();
-    saveStateToHistory();
   });
   
   // Focus on the new label input
@@ -983,32 +857,13 @@ function downloadChart() {
 // ============================================
 function getSVGIcon(type) {
   const icons = {
-    pie: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M21.21 15.89A10 10 0 1 1 8 2.83"></path>
-      <path d="M22 12A10 10 0 0 0 12 2v10z"></path>
-    </svg>`,
-    donut: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <circle cx="12" cy="12" r="10"></circle>
-      <circle cx="12" cy="12" r="4"></circle>
-      <path d="M12 2v4"></path>
-      <path d="M12 18v4"></path>
-    </svg>`,
-    bar: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <line x1="12" y1="20" x2="12" y2="10"></line>
-      <line x1="18" y1="20" x2="18" y2="4"></line>
-      <line x1="6" y1="20" x2="6" y2="16"></line>
-    </svg>`,
-    line: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
-    </svg>`,
-    pictogram: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <rect x="3" y="3" width="7" height="7"></rect>
-      <rect x="14" y="3" width="7" height="7"></rect>
-      <rect x="14" y="14" width="7" height="7"></rect>
-      <rect x="3" y="14" width="7" height="7"></rect>
-    </svg>`
+    pie: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M9 2.4578V4.58152C6.06817 5.76829 4 8.64262 4 12C4 16.4183 7.58172 20 12 20C15.3574 20 18.2317 17.9318 19.4185 15H21.5422C20.2679 19.0571 16.4776 22 12 22C6.47715 22 2 17.5228 2 12C2 7.52236 4.94289 3.73207 9 2.4578ZM12 2C17.5228 2 22 6.47715 22 12C22 12.3375 21.9833 12.6711 21.9506 13H11V2.04938C11.3289 2.01672 11.6625 2 12 2ZM13 4.06189V11H19.9381C19.4869 7.38128 16.6187 4.51314 13 4.06189Z"></path></svg>`,
+    donut: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M10.9999 2.04938L11 5.07088C7.6077 5.55612 5 8.47352 5 12C5 15.866 8.13401 19 12 19C13.5723 19 15.0236 18.4816 16.1922 17.6064L18.3289 19.7428C16.605 21.1536 14.4014 22 12 22C6.47715 22 2 17.5228 2 12C2 6.81468 5.94662 2.55115 10.9999 2.04938ZM21.9506 13.0001C21.7509 15.0111 20.9555 16.8468 19.7433 18.3283L17.6064 16.1922C18.2926 15.2759 18.7595 14.1859 18.9291 13L21.9506 13.0001ZM13.0011 2.04948C17.725 2.51902 21.4815 6.27589 21.9506 10.9999L18.9291 10.9998C18.4905 7.93452 16.0661 5.50992 13.001 5.07103L13.0011 2.04948Z"></path></svg>`,
+    bar: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M3 12H7V21H3V12ZM17 8H21V21H17V8ZM10 2H14V21H10V2Z"></path></svg>`,
+    line: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M5 3V19H21V21H3V3H5ZM20.2929 6.29289L21.7071 7.70711L16 13.4142L13 10.415L8.70711 14.7071L7.29289 13.2929L13 7.58579L16 10.585L20.2929 6.29289Z"></path></svg>`,
+    pictogram: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M2 22C2 17.5817 5.58172 14 10 14C14.4183 14 18 17.5817 18 22H16C16 18.6863 13.3137 16 10 16C6.68629 16 4 18.6863 4 22H2ZM10 13C6.685 13 4 10.315 4 7C4 3.685 6.685 1 10 1C13.315 1 16 3.685 16 7C16 10.315 13.315 13 10 13ZM10 11C12.21 11 14 9.21 14 7C14 4.79 12.21 3 10 3C7.79 3 6 4.79 6 7C6 9.21 7.79 11 10 11ZM18.2837 14.7028C21.0644 15.9561 23 18.752 23 22H21C21 19.564 19.5483 17.4671 17.4628 16.5271L18.2837 14.7028ZM17.5962 3.41321C19.5944 4.23703 21 6.20361 21 8.5C21 11.3702 18.8042 13.7252 16 13.9776V11.9646C17.6967 11.7222 19 10.264 19 8.5C19 7.11935 18.2016 5.92603 17.041 5.35635L17.5962 3.41321Z"></path></svg>`
   };
-  
+
   return icons[type] || icons.pie;
 }
 
