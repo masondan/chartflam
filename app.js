@@ -18,7 +18,29 @@ const state = {
   chartTitle: 'Sample Chart',
   chartCaption: '',
   chartBackgroundColor: '#FFFFFF',
-  smoothingValue: 0,
+  smoothingValue: 5,
+  gapValue: 4,
+  activeControl: 'corner',
+  titleFont: 'Inter',
+  titleColor: '#555555',
+  titleBold: true,
+  titleItalic: false,
+  titleSize: 24,
+  titleLineHeight: 1.2,
+  titleAlign: 'center',
+  activeTitleControl: 'size',
+  captionFont: 'Inter',
+  captionColor: '#555555',
+  captionBold: false,
+  captionItalic: false,
+  captionSize: 14,
+  captionLineHeight: 1.4,
+  captionAlign: 'center',
+  activeCaptionControl: 'size',
+  legendVisible: true,
+  legendPosition: 'bottom',
+  legendSize: 12,
+  legendColor: '#555555',
   chart: null,
   isProcessing: false
 };
@@ -196,8 +218,8 @@ function startApp() {
       <!-- Controls Container -->
       <div class="controls-container" role="region" aria-label="Chart controls">
         <!-- Data Input -->
-        <details class="control-section" open>
-          <summary aria-expanded="true" aria-controls="data-content">Data</summary>
+        <details class="control-section">
+          <summary aria-expanded="false" aria-controls="data-content">Data</summary>
           <div id="data-content" class="control-content">
             <div class="data-tabs" role="tablist" aria-label="Data input method">
               <button class="tab-btn active" data-tab="manual" role="tab" aria-selected="true" aria-controls="manual-input">Manual</button>
@@ -205,7 +227,9 @@ function startApp() {
             </div>
             <div id="manual-input" class="tab-content active" role="tabpanel" aria-labelledby="manual-tab">
               <div id="manual-rows" role="list" aria-label="Data entries"></div>
-              <button class="btn-add" id="add-row-btn" aria-label="Add new data row">+ Add Row</button>
+              <button class="btn-add" id="add-row-btn" aria-label="Add new data row">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M11 11V7H13V11H17V13H13V17H11V13H7V11H11ZM12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12C22 17.5228 17.5228 22 12 22ZM12 20C16.4183 20 20 16.4183 20 12C20 7.58172 16.4183 4 12 4C7.58172 4 4 7.58172 4 12C4 16.4183 7.58172 20 12 20Z"></path></svg>
+              </button>
             </div>
             <div id="csv-input" class="tab-content" role="tabpanel" aria-labelledby="csv-tab">
               <textarea id="csv-textarea" 
@@ -217,61 +241,177 @@ function startApp() {
           </div>
         </details>
 
-        <!-- Colors -->
+        <!-- Colours -->
         <details class="control-section">
-          <summary aria-expanded="false" aria-controls="colors-content">Colors</summary>
-          <div id="colors-content" class="control-content">
-            <div id="color-controls" role="group" aria-label="Segment colors"></div>
-            <div class="input-group">
-              <label for="bg-color">Background Color:</label>
-              <input type="color" 
-                     id="bg-color" 
-                     value="${state.chartBackgroundColor}"
-                     aria-label="Chart background color">
+          <summary aria-expanded="false" aria-controls="colours-content">Colours</summary>
+          <div id="colours-content" class="control-content">
+            <div id="color-controls" role="group" aria-label="Segment colours"></div>
+            <div class="color-control bg-control">
+              <span class="color-label">Background</span>
+              <div class="bg-options">
+                <button class="bg-option active" data-bg="white" aria-label="White background">
+                  <span class="bg-circle bg-white"></span>
+                </button>
+                <button class="bg-option" data-bg="transparent" aria-label="Transparent background">
+                  <span class="bg-circle bg-transparent"></span>
+                </button>
+                <button class="bg-option" data-bg="rainbow" aria-label="Rainbow gradient background">
+                  <span class="bg-circle bg-rainbow"></span>
+                </button>
+              </div>
             </div>
           </div>
         </details>
 
-        <!-- Smoothing (for pie/donut only) -->
-        <div class="control-section-inline" id="smoothing-control" role="group" aria-label="Corner smoothing control">
-          <label for="smoothing-slider">Corner Smoothing:</label>
-          <input type="range" 
-                 id="smoothing-slider" 
-                 min="0" 
-                 max="20" 
-                 value="${state.smoothingValue}"
-                 aria-label="Corner smoothing amount"
-                 aria-valuemin="0"
-                 aria-valuemax="20"
-                 aria-valuenow="${state.smoothingValue}">
-          <span id="smoothing-value" aria-live="polite">${state.smoothingValue}</span>
-        </div>
+        <!-- Style (for pie/donut only) -->
+        <details class="control-section" id="style-control">
+          <summary aria-expanded="false" aria-controls="style-content">Style</summary>
+          <div id="style-content" class="control-content">
+            <div class="text-controls">
+              <button class="smooth-toggle active" data-type="corner" aria-label="Corner smoothing" title="Corner smoothing">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M21 19V21H19V19H21ZM17 19V21H15V19H17ZM13 19V21H11V19H13ZM9 19V21H7V19H9ZM5 19V21H3V19H5ZM21 15V17H19V15H21ZM5 15V17H3V15H5ZM5 11V13H3V11H5ZM16 3C18.6874 3 20.8817 5.12366 20.9954 7.78322L21 8V13H19V8C19 6.40893 17.7447 5.09681 16.1756 5.00512L16 5H11V3H16ZM5 7V9H3V7H5ZM5 3V5H3V3H5ZM9 3V5H7V3H9Z"></path></svg>
+              </button>
+              <button class="smooth-toggle" data-type="gap" aria-label="Slice gap" title="Slice gap">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M18 2H6V4H18V2ZM16.9497 9.44975L12 4.5L7.05273 9.44727L11 9.44826V14.5501L7.05078 14.55L12.0005 19.5L16.9502 14.5503L13 14.5502V9.44876L16.9497 9.44975ZM18 20V22H6V20H18Z"></path></svg>
+              </button>
+              <input type="range" 
+                     id="smoothing-slider"
+                     class="text-slider" 
+                     min="0" 
+                     max="20" 
+                     value="${state.smoothingValue}">
+            </div>
+          </div>
+        </details>
 
-        <!-- Titles -->
+        <!-- Title -->
         <details class="control-section">
-          <summary aria-expanded="false" aria-controls="titles-content">Titles & Caption</summary>
-          <div id="titles-content" class="control-content">
-            <div class="input-group">
-              <label for="title-input">Chart Title:</label>
+          <summary aria-expanded="false" aria-controls="title-content">Title</summary>
+          <div id="title-content" class="control-content">
+            <div class="text-subsection">
               <input type="text" 
                      id="title-input" 
+                     class="text-input-field"
                      value="${state.chartTitle}" 
-                     placeholder="Enter chart title"
-                     maxlength="${validation.maxTitleLength}"
-                     aria-label="Chart title"
-                     aria-describedby="title-hint">
-              <small id="title-hint" class="input-hint">Max ${validation.maxTitleLength} characters</small>
+                     placeholder="Chart Title"
+                     maxlength="${validation.maxTitleLength}">
+              
+              <div class="font-control-row">
+                <select id="title-font" class="font-select">
+                  <option value="" disabled selected>Choose Font</option>
+                  <option value="Inter">Inter (Default)</option>
+                  <option value="Alfa Slab One">Alfa Slab One</option>
+                  <option value="Lora">Lora Serif</option>
+                  <option value="Playfair Display">Playfair Display</option>
+                  <option value="Saira Condensed">Saira Condensed</option>
+                  <option value="Special Elite">Special Elite</option>
+                </select>
+                <button class="text-control-btn" id="title-align-cycle" title="Text alignment">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M3 4H21V6H3V4ZM5 19H19V21H5V19ZM3 14H21V16H3V14ZM5 9H19V11H5V9Z"></path></svg>
+                </button>
+                <button class="text-control-btn ${state.titleBold ? 'active' : ''}" id="title-bold" title="Bold">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M8 11H12.5C13.8807 11 15 9.88071 15 8.5C15 7.11929 13.8807 6 12.5 6H8V11ZM18 15.5C18 17.9853 15.9853 20 13.5 20H6V4H12.5C14.9853 4 17 6.01472 17 8.5C17 9.70431 16.5269 10.7981 15.7564 11.6058C17.0979 12.3847 18 13.837 18 15.5ZM8 13V18H13.5C14.8807 18 16 16.8807 16 15.5C16 14.1193 14.8807 13 13.5 13H8Z"></path></svg>
+                </button>
+                <button class="text-control-btn ${state.titleItalic ? 'active' : ''}" id="title-italic" title="Italic">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M15 20H7V18H9.92661L12.0425 6H9V4H17V6H14.0734L11.9575 18H15V20Z"></path></svg>
+                </button>
+              </div>
+              
+              <div class="text-controls">
+                <button class="text-control-btn active" id="title-size-toggle" data-type="size" title="Font size">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M11.246 15H4.75416L2.75416 20H0.600098L7.0001 4H9.0001L15.4001 20H13.246L11.246 15ZM10.446 13L8.0001 6.88516L5.55416 13H10.446ZM21.0001 12.5351V12H23.0001V20H21.0001V19.4649C20.4118 19.8052 19.7287 20 19.0001 20C16.791 20 15.0001 18.2091 15.0001 16C15.0001 13.7909 16.791 12 19.0001 12C19.7287 12 20.4118 12.1948 21.0001 12.5351ZM19.0001 18C20.1047 18 21.0001 17.1046 21.0001 16C21.0001 14.8954 20.1047 14 19.0001 14C17.8955 14 17.0001 14.8954 17.0001 16C17.0001 17.1046 17.8955 18 19.0001 18Z"></path></svg>
+                </button>
+                <button class="text-control-btn" id="title-lineheight-toggle" data-type="lineheight" title="Line spacing">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M2 3.00012L2.00008 5.00012L4.00004 5.00004L4.00004 19L2 19.0001L2.00008 21.0001L8.00004 21V19H6.00004L6.00004 5.00004L8 5.00012L8.00008 3.00012L2 3.00012ZM10.2 18H12.3541L13.5541 15H18.4459L19.6459 18H21.8L17 6H15L10.2 18ZM16 8.88517L17.6459 13H14.3541L16 8.88517Z"></path></svg>
+                </button>
+                <input type="range" 
+                       id="title-slider" 
+                       class="text-slider"
+                       min="16" 
+                       max="48" 
+                       value="${state.titleSize}">
+                <input type="color" id="title-color" class="color-picker" value="${state.titleColor}">
+              </div>
             </div>
-            <div class="input-group">
-              <label for="caption-input">Caption/Source:</label>
+          </div>
+        </details>
+
+        <!-- Caption & Source -->
+        <details class="control-section">
+          <summary aria-expanded="false" aria-controls="caption-content">Caption & Source</summary>
+          <div id="caption-content" class="control-content">
+            <div class="text-subsection">
               <input type="text" 
                      id="caption-input" 
+                     class="text-input-field"
                      value="${state.chartCaption}" 
-                     placeholder="Enter caption or source"
-                     maxlength="${validation.maxCaptionLength}"
-                     aria-label="Chart caption or source"
-                     aria-describedby="caption-hint">
-              <small id="caption-hint" class="input-hint">Max ${validation.maxCaptionLength} characters</small>
+                     placeholder="Caption and Data Source"
+                     maxlength="${validation.maxCaptionLength}">
+              
+              <div class="font-control-row">
+                <select id="caption-font" class="font-select">
+                  <option value="" disabled selected>Choose Font</option>
+                  <option value="Inter">Inter (Default)</option>
+                  <option value="Alfa Slab One">Alfa Slab One</option>
+                  <option value="Lora">Lora Serif</option>
+                  <option value="Playfair Display">Playfair Display</option>
+                  <option value="Saira Condensed">Saira Condensed</option>
+                  <option value="Special Elite">Special Elite</option>
+                </select>
+                <button class="text-control-btn" id="caption-align-cycle" title="Text alignment">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M3 4H21V6H3V4ZM5 19H19V21H5V19ZM3 14H21V16H3V14ZM5 9H19V11H5V9Z"></path></svg>
+                </button>
+                <button class="text-control-btn ${state.captionBold ? 'active' : ''}" id="caption-bold" title="Bold">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M8 11H12.5C13.8807 11 15 9.88071 15 8.5C15 7.11929 13.8807 6 12.5 6H8V11ZM18 15.5C18 17.9853 15.9853 20 13.5 20H6V4H12.5C14.9853 4 17 6.01472 17 8.5C17 9.70431 16.5269 10.7981 15.7564 11.6058C17.0979 12.3847 18 13.837 18 15.5ZM8 13V18H13.5C14.8807 18 16 16.8807 16 15.5C16 14.1193 14.8807 13 13.5 13H8Z"></path></svg>
+                </button>
+                <button class="text-control-btn ${state.captionItalic ? 'active' : ''}" id="caption-italic" title="Italic">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M15 20H7V18H9.92661L12.0425 6H9V4H17V6H14.0734L11.9575 18H15V20Z"></path></svg>
+                </button>
+              </div>
+              
+              <div class="text-controls">
+                <button class="text-control-btn active" id="caption-size-toggle" data-type="size" title="Font size">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M11.246 15H4.75416L2.75416 20H0.600098L7.0001 4H9.0001L15.4001 20H13.246L11.246 15ZM10.446 13L8.0001 6.88516L5.55416 13H10.446ZM21.0001 12.5351V12H23.0001V20H21.0001V19.4649C20.4118 19.8052 19.7287 20 19.0001 20C16.791 20 15.0001 18.2091 15.0001 16C15.0001 13.7909 16.791 12 19.0001 12C19.7287 12 20.4118 12.1948 21.0001 12.5351ZM19.0001 18C20.1047 18 21.0001 17.1046 21.0001 16C21.0001 14.8954 20.1047 14 19.0001 14C17.8955 14 17.0001 14.8954 17.0001 16C17.0001 17.1046 17.8955 18 19.0001 18Z"></path></svg>
+                </button>
+                <button class="text-control-btn" id="caption-lineheight-toggle" data-type="lineheight" title="Line spacing">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M2 3.00012L2.00008 5.00012L4.00004 5.00004L4.00004 19L2 19.0001L2.00008 21.0001L8.00004 21V19H6.00004L6.00004 5.00004L8 5.00012L8.00008 3.00012L2 3.00012ZM10.2 18H12.3541L13.5541 15H18.4459L19.6459 18H21.8L17 6H15L10.2 18ZM16 8.88517L17.6459 13H14.3541L16 8.88517Z"></path></svg>
+                </button>
+                <input type="range" 
+                       id="caption-slider" 
+                       class="text-slider"
+                       min="12" 
+                       max="24" 
+                       value="14">
+                <input type="color" id="caption-color" class="color-picker" value="#555555">
+              </div>
+            </div>
+          </div>
+        </details>
+
+        <!-- Legend -->
+        <details class="control-section">
+          <summary aria-expanded="false" aria-controls="legend-content">Legend</summary>
+          <div id="legend-content" class="control-content">
+            <div class="legend-control-row">
+              <button class="text-control-btn" id="legend-visible-toggle" title="Show/hide legend">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12.0003 3C17.3924 3 21.8784 6.87976 22.8189 12C21.8784 17.1202 17.3924 21 12.0003 21C6.60812 21 2.12215 17.1202 1.18164 12C2.12215 6.87976 6.60812 3 12.0003 3ZM12.0003 19C16.2359 19 19.8603 16.052 20.7777 12C19.8603 7.94803 16.2359 5 12.0003 5C7.7646 5 4.14022 7.94803 3.22278 12C4.14022 16.052 7.7646 19 12.0003 19ZM12.0003 16.5C9.51498 16.5 7.50026 14.4853 7.50026 12C7.50026 9.51472 9.51498 7.5 12.0003 7.5C14.4855 7.5 16.5003 9.51472 16.5003 12C16.5003 14.4853 14.4855 16.5 12.0003 16.5ZM12.0003 14.5C13.381 14.5 14.5003 13.3807 14.5003 12C14.5003 10.6193 13.381 9.5 12.0003 9.5C10.6196 9.5 9.50026 10.6193 9.50026 12C9.50026 13.3807 10.6196 14.5 12.0003 14.5Z"></path></svg>
+              </button>
+              <button class="text-control-btn ${state.legendPosition === 'bottom' ? 'active' : ''}" id="legend-position-down" title="Legend below chart">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M13.0001 16.1716L18.3641 10.8076L19.7783 12.2218L12.0001 20L4.22192 12.2218L5.63614 10.8076L11.0001 16.1716V4H13.0001V16.1716Z"></path></svg>
+              </button>
+              <button class="text-control-btn ${state.legendPosition === 'top' ? 'active' : ''}" id="legend-position-up" title="Legend above chart">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M13.0001 7.82843V20H11.0001V7.82843L5.63614 13.1924L4.22192 11.7782L12.0001 4L19.7783 11.7782L18.3641 13.1924L13.0001 7.82843Z"></path></svg>
+              </button>
+              <span class="legend-size-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M11.246 15H4.75416L2.75416 20H0.600098L7.0001 4H9.0001L15.4001 20H13.246L11.246 15ZM10.446 13L8.0001 6.88516L5.55416 13H10.446ZM21.0001 12.5351V12H23.0001V20H21.0001V19.4649C20.4118 19.8052 19.7287 20 19.0001 20C16.791 20 15.0001 18.2091 15.0001 16C15.0001 13.7909 16.791 12 19.0001 12C19.7287 12 20.4118 12.1948 21.0001 12.5351ZM19.0001 18C20.1047 18 21.0001 17.1046 21.0001 16C21.0001 14.8954 20.1047 14 19.0001 14C17.8955 14 17.0001 14.8954 17.0001 16C17.0001 17.1046 17.8955 18 19.0001 18Z"></path></svg>
+              </span>
+              <input type="range" 
+                     id="legend-size-slider" 
+                     class="text-slider"
+                     min="10" 
+                     max="18" 
+                     value="${state.legendSize}">
+              <input type="color" id="legend-color" class="color-picker" value="${state.legendColor}">
             </div>
           </div>
         </details>
@@ -280,7 +420,7 @@ function startApp() {
         <button class="btn btn-primary" 
                 id="download-btn" 
                 aria-label="Download chart as PNG image">
-          Download PNG
+          Download
         </button>
       </div>
     </div>
@@ -293,6 +433,7 @@ function startApp() {
     initColorControls();
     updateSmoothingVisibility();
     renderChart();
+    setupDropdownBehavior();
   }, 0);
 }
 
@@ -352,9 +493,52 @@ function initEventListeners() {
   const csvTextarea = document.getElementById('csv-textarea');
   csvTextarea.addEventListener('input', debounce(updateDataFromCSV, 500));
 
-  // Background color
-  document.getElementById('bg-color').addEventListener('change', () => {
-    updateBackgroundColor();
+  // Background color options
+  const bgWhite = document.querySelector('.bg-option[data-bg="white"]');
+  const bgTransparent = document.querySelector('.bg-option[data-bg="transparent"]');
+  const bgRainbow = document.querySelector('.bg-option[data-bg="rainbow"]');
+  
+  bgWhite.addEventListener('click', () => {
+    document.querySelectorAll('.bg-option').forEach(b => b.classList.remove('active'));
+    bgWhite.classList.add('active');
+    updateBackgroundColor('white');
+  });
+  
+  bgTransparent.addEventListener('click', () => {
+    document.querySelectorAll('.bg-option').forEach(b => b.classList.remove('active'));
+    bgTransparent.classList.add('active');
+    updateBackgroundColor('transparent');
+  });
+  
+  // Rainbow button opens color picker
+  bgRainbow.addEventListener('click', () => {
+    const colorInput = document.createElement('input');
+    colorInput.type = 'color';
+    colorInput.value = state.chartBackgroundColor === 'transparent' ? '#FFFFFF' : state.chartBackgroundColor;
+    colorInput.click();
+    colorInput.addEventListener('input', (e) => {
+      state.chartBackgroundColor = e.target.value;
+      document.querySelector('.chart-canvas-wrapper').style.backgroundColor = e.target.value;
+      document.querySelectorAll('.bg-option').forEach(b => b.classList.remove('active'));
+      bgRainbow.classList.add('active');
+      
+      // Update pie gaps
+      if (state.currentChartType === 'pie' || state.currentChartType === 'donut') {
+        state.chartData.datasets[0].borderColor = e.target.value;
+        renderChart();
+      }
+    });
+  });
+
+  // Smoothing toggle buttons
+  const smoothToggles = document.querySelectorAll('.smooth-toggle');
+  smoothToggles.forEach(btn => {
+    btn.addEventListener('click', () => {
+      smoothToggles.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      state.activeControl = btn.dataset.type;
+      updateSmoothingSlider();
+    });
   });
 
   // Smoothing slider
@@ -363,14 +547,153 @@ function initEventListeners() {
     updateSmoothing();
   }, 100));
 
-  // Title and caption (with debouncing)
+  // Title controls
   document.getElementById('title-input').addEventListener('input', debounce(() => {
     updateTitle();
   }, 300));
 
+  document.getElementById('title-font').addEventListener('change', (e) => {
+    state.titleFont = e.target.value;
+    // Reset to normal weight for non-Inter fonts
+    if (state.titleFont !== 'Inter') {
+      state.titleBold = false;
+      document.getElementById('title-bold').classList.remove('active');
+    }
+    updateTitleStyle();
+  });
+
+  document.getElementById('title-color').addEventListener('input', () => {
+    state.titleColor = document.getElementById('title-color').value;
+    updateTitleStyle();
+  });
+
+  // Title alignment cycle button
+  document.getElementById('title-align-cycle').addEventListener('click', () => {
+    const alignments = ['center', 'left', 'right'];
+    const currentIndex = alignments.indexOf(state.titleAlign);
+    const nextIndex = (currentIndex + 1) % alignments.length;
+    state.titleAlign = alignments[nextIndex];
+    updateAlignmentIcon();
+    updateTitleStyle();
+  });
+
+  // Title bold/italic
+  document.getElementById('title-bold').addEventListener('click', () => {
+    const btn = document.getElementById('title-bold');
+    state.titleBold = !state.titleBold;
+    btn.classList.toggle('active');
+    updateTitleStyle();
+  });
+
+  document.getElementById('title-italic').addEventListener('click', () => {
+    const btn = document.getElementById('title-italic');
+    state.titleItalic = !state.titleItalic;
+    btn.classList.toggle('active');
+    updateTitleStyle();
+  });
+
+  // Title size/lineheight toggles
+  const titleToggles = document.querySelectorAll('#title-size-toggle, #title-lineheight-toggle');
+  titleToggles.forEach(btn => {
+    btn.addEventListener('click', () => {
+      titleToggles.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      state.activeTitleControl = btn.dataset.type;
+      updateTitleSlider();
+    });
+  });
+
+  // Title slider
+  document.getElementById('title-slider').addEventListener('input', debounce(() => {
+    updateTitleSlider();
+  }, 100));
+
+  // Caption controls
   document.getElementById('caption-input').addEventListener('input', debounce(() => {
     updateCaption();
   }, 300));
+
+  document.getElementById('caption-font').addEventListener('change', (e) => {
+    state.captionFont = e.target.value;
+    updateCaptionStyle();
+  });
+
+  document.getElementById('caption-color').addEventListener('input', () => {
+    state.captionColor = document.getElementById('caption-color').value;
+    updateCaptionStyle();
+  });
+
+  // Caption alignment cycle button
+  document.getElementById('caption-align-cycle').addEventListener('click', () => {
+    const alignments = ['center', 'left', 'right'];
+    const currentIndex = alignments.indexOf(state.captionAlign);
+    const nextIndex = (currentIndex + 1) % alignments.length;
+    state.captionAlign = alignments[nextIndex];
+    updateCaptionAlignmentIcon();
+    updateCaptionStyle();
+  });
+
+  // Caption bold/italic
+  document.getElementById('caption-bold').addEventListener('click', () => {
+    const btn = document.getElementById('caption-bold');
+    state.captionBold = !state.captionBold;
+    btn.classList.toggle('active');
+    updateCaptionStyle();
+  });
+
+  document.getElementById('caption-italic').addEventListener('click', () => {
+    const btn = document.getElementById('caption-italic');
+    state.captionItalic = !state.captionItalic;
+    btn.classList.toggle('active');
+    updateCaptionStyle();
+  });
+
+  // Caption size/lineheight toggles
+  const captionToggles = document.querySelectorAll('#caption-size-toggle, #caption-lineheight-toggle');
+  captionToggles.forEach(btn => {
+    btn.addEventListener('click', () => {
+      captionToggles.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      state.activeCaptionControl = btn.dataset.type;
+      updateCaptionSlider();
+    });
+  });
+
+  // Caption slider
+  document.getElementById('caption-slider').addEventListener('input', debounce(() => {
+    updateCaptionSlider();
+  }, 100));
+
+  // Legend controls
+  document.getElementById('legend-visible-toggle').addEventListener('click', () => {
+    state.legendVisible = !state.legendVisible;
+    updateLegendVisibilityIcon();
+    renderChart();
+  });
+
+  document.getElementById('legend-position-down').addEventListener('click', () => {
+    state.legendPosition = 'bottom';
+    document.getElementById('legend-position-down').classList.add('active');
+    document.getElementById('legend-position-up').classList.remove('active');
+    renderChart();
+  });
+
+  document.getElementById('legend-position-up').addEventListener('click', () => {
+    state.legendPosition = 'top';
+    document.getElementById('legend-position-up').classList.add('active');
+    document.getElementById('legend-position-down').classList.remove('active');
+    renderChart();
+  });
+
+  document.getElementById('legend-size-slider').addEventListener('input', debounce(() => {
+    state.legendSize = parseInt(document.getElementById('legend-size-slider').value);
+    updateLegendStyle();
+  }, 100));
+
+  document.getElementById('legend-color').addEventListener('input', () => {
+    state.legendColor = document.getElementById('legend-color').value;
+    updateLegendStyle();
+  });
 
   // Download button
   document.getElementById('download-btn').addEventListener('click', downloadChart);
@@ -467,7 +790,7 @@ function renderChart() {
 
   // Set canvas size explicitly for Chart.js
   const container = document.querySelector('.chart-canvas-container');
-  const width = Math.min(container.clientWidth, 400);
+  const width = container.clientWidth;
   canvas.width = width;
   canvas.height = width;
   
@@ -484,15 +807,37 @@ function renderChart() {
     data: state.chartData,
     options: {
       responsive: false,
+      layout: {
+        padding: {
+          top: 5,
+          bottom: 5,
+          left: 5,
+          right: 5
+        }
+      },
       plugins: {
         legend: {
-          position: 'bottom',
-          display: true,
+          position: state.legendPosition,
+          display: state.legendVisible,
           labels: {
             padding: 15,
             font: {
-              size: 12,
+              size: state.legendSize,
               family: "'Inter', sans-serif"
+            },
+            color: state.legendColor,
+            usePointStyle: true,
+            pointStyle: 'circle',
+            generateLabels: (chart) => {
+              const datasets = chart.data.datasets;
+              return chart.data.labels.map((label, i) => ({
+                text: label,
+                fillStyle: datasets[0].backgroundColor[i],
+                strokeStyle: '#FFFFFF',
+                lineWidth: 3,
+                hidden: false,
+                index: i
+              }));
             }
           }
         },
@@ -503,13 +848,16 @@ function renderChart() {
     }
   };
 
-  // Apply smoothing for pie/donut charts
+  // Apply smoothing and gap for pie/donut charts
   if (state.currentChartType === 'pie' || state.currentChartType === 'donut') {
     config.options.elements = {
       arc: {
         borderRadius: state.smoothingValue
       }
     };
+    // Set border width and color for gap effect
+    state.chartData.datasets[0].borderWidth = state.gapValue;
+    state.chartData.datasets[0].borderColor = state.chartBackgroundColor;
   }
 
   // Create new chart
@@ -562,9 +910,8 @@ function addManualRow(label = '', value = '') {
     <button class="btn-remove" 
             title="Remove row" 
             aria-label="Remove this data entry">
-      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <line x1="18" y1="6" x2="6" y2="18"></line>
-        <line x1="6" y1="6" x2="18" y2="18"></line>
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M7 4V2H17V4H22V6H20V21C20 21.5523 19.5523 22 19 22H5C4.44772 22 4 21.5523 4 21V6H2V4H7ZM6 6V20H18V6H6ZM9 9H11V17H9V9ZM13 9H15V17H13V9Z"></path>
       </svg>
     </button>
     <small id="${rowId}-hint" class="sr-only">Max ${validation.maxLabelLength} characters</small>
@@ -721,7 +1068,7 @@ function initColorControls() {
     control.className = 'color-control';
     
     control.innerHTML = `
-      <span class="color-label">${label}:</span>
+      <span class="color-label">${label}</span>
       <input type="color" class="color-picker" value="${state.chartData.datasets[0].backgroundColor[index]}" data-index="${index}">
     `;
     
@@ -729,7 +1076,7 @@ function initColorControls() {
     
     // Add event listener
     const colorPicker = control.querySelector('.color-picker');
-    colorPicker.addEventListener('change', (e) => {
+    colorPicker.addEventListener('input', (e) => {
       updateSegmentColor(index, e.target.value);
     });
   });
@@ -758,38 +1105,220 @@ function ensureColorsMatchData() {
 // ============================================
 // CHART STYLING
 // ============================================
-function updateBackgroundColor() {
-  state.chartBackgroundColor = document.getElementById('bg-color').value;
-  document.querySelector('.chart-canvas-wrapper').style.backgroundColor = state.chartBackgroundColor;
+function updateBackgroundColor(bgType) {
+  let backgroundColor;
+  
+  switch(bgType) {
+    case 'white':
+      backgroundColor = '#FFFFFF';
+      break;
+    case 'transparent':
+      backgroundColor = 'transparent';
+      break;
+    case 'rainbow':
+      backgroundColor = 'linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%)';
+      break;
+    default:
+      backgroundColor = '#FFFFFF';
+  }
+  
+  state.chartBackgroundColor = backgroundColor;
+  const wrapper = document.querySelector('.chart-canvas-wrapper');
+  
+  if (bgType === 'rainbow') {
+    wrapper.style.background = backgroundColor;
+    wrapper.style.backgroundColor = '';
+  } else {
+    wrapper.style.backgroundColor = backgroundColor;
+    wrapper.style.background = '';
+  }
+  
+  // Update border color for pie/donut gaps
+  if (state.currentChartType === 'pie' || state.currentChartType === 'donut') {
+    if (bgType === 'white') {
+      state.chartData.datasets[0].borderColor = '#FFFFFF';
+    } else {
+      state.chartData.datasets[0].borderColor = 'transparent';
+    }
+    renderChart();
+  }
 }
 
 function updateSmoothing() {
-  state.smoothingValue = parseInt(document.getElementById('smoothing-slider').value);
-  document.getElementById('smoothing-value').textContent = state.smoothingValue;
+  const value = parseInt(document.getElementById('smoothing-slider').value);
+  
+  if (state.activeControl === 'corner') {
+    state.smoothingValue = value;
+  } else {
+    state.gapValue = value;
+  }
+  
   renderChart();
 }
 
-function updateSmoothingVisibility() {
-  const smoothingControl = document.getElementById('smoothing-control');
-  if (state.currentChartType === 'pie' || state.currentChartType === 'donut') {
-    smoothingControl.style.display = 'flex';
+function updateSmoothingSlider() {
+  const slider = document.getElementById('smoothing-slider');
+  if (state.activeControl === 'corner') {
+    slider.value = state.smoothingValue;
   } else {
-    smoothingControl.style.display = 'none';
+    slider.value = state.gapValue;
+  }
+}
+
+function updateSmoothingVisibility() {
+  const styleControl = document.getElementById('style-control');
+  if (state.currentChartType === 'pie' || state.currentChartType === 'donut') {
+    styleControl.style.display = 'block';
+  } else {
+    styleControl.style.display = 'none';
   }
 }
 
 function updateTitle() {
   state.chartTitle = document.getElementById('title-input').value;
-  const titleEl = document.getElementById('chart-title');
-  titleEl.textContent = state.chartTitle;
-  titleEl.style.display = state.chartTitle ? 'block' : 'none';
+  const titleEl = document.querySelector('.chart-title');
+  if (titleEl) {
+    titleEl.textContent = state.chartTitle;
+    titleEl.style.display = state.chartTitle ? 'block' : 'none';
+    updateTitleStyle();
+  }
+}
+
+function updateTitleStyle() {
+  const titleEl = document.querySelector('.chart-title');
+  if (!titleEl) return;
+  
+  const fontFamily = state.titleFont || 'Inter';
+  titleEl.style.fontFamily = `'${fontFamily}', sans-serif`;
+  titleEl.style.color = state.titleColor;
+  titleEl.style.fontWeight = state.titleBold ? '700' : '400';
+  titleEl.style.fontStyle = state.titleItalic ? 'italic' : 'normal';
+  titleEl.style.fontSize = `${state.titleSize}px`;
+  titleEl.style.lineHeight = state.titleLineHeight;
+  titleEl.style.textAlign = state.titleAlign;
+}
+
+function updateAlignmentIcon() {
+  const alignBtn = document.getElementById('title-align-cycle');
+  const alignIcons = {
+    left: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M3 4H21V6H3V4ZM3 19H17V21H3V19ZM3 14H21V16H3V14ZM3 9H17V11H3V9Z"></path></svg>',
+    center: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M3 4H21V6H3V4ZM5 19H19V21H5V19ZM3 14H21V16H3V14ZM5 9H19V11H5V9Z"></path></svg>',
+    right: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M3 4H21V6H3V4ZM7 19H21V21H7V19ZM3 14H21V16H3V14ZM7 9H21V11H7V9Z"></path></svg>'
+  };
+  alignBtn.innerHTML = alignIcons[state.titleAlign];
+}
+
+function updateTitleSlider() {
+  const slider = document.getElementById('title-slider');
+  const value = parseInt(slider.value);
+  
+  if (!state.activeTitleControl) state.activeTitleControl = 'size';
+  
+  if (state.activeTitleControl === 'size') {
+    state.titleSize = value;
+    slider.min = 16;
+    slider.max = 48;
+    slider.value = state.titleSize;
+  } else {
+    const lineHeightMap = [1.0, 1.2, 1.4, 1.6, 1.8, 2.0];
+    const index = Math.min(Math.floor((value - 16) / 5.33), 5);
+    state.titleLineHeight = lineHeightMap[index];
+    slider.min = 16;
+    slider.max = 48;
+  }
+  
+  updateTitleStyle();
 }
 
 function updateCaption() {
   state.chartCaption = document.getElementById('caption-input').value;
-  const captionEl = document.getElementById('chart-caption');
-  captionEl.textContent = state.chartCaption;
-  captionEl.style.display = state.chartCaption ? 'block' : 'none';
+  const captionEl = document.querySelector('.chart-caption');
+  if (captionEl) {
+    captionEl.textContent = state.chartCaption;
+    captionEl.style.display = state.chartCaption ? 'block' : 'none';
+    updateCaptionStyle();
+  }
+}
+
+function updateCaptionStyle() {
+  const captionEl = document.querySelector('.chart-caption');
+  if (!captionEl) return;
+  
+  const fontFamily = state.captionFont || 'Inter';
+  captionEl.style.fontFamily = `'${fontFamily}', sans-serif`;
+  captionEl.style.color = state.captionColor;
+  captionEl.style.fontWeight = state.captionBold ? '700' : '400';
+  captionEl.style.fontStyle = state.captionItalic ? 'italic' : 'normal';
+  captionEl.style.fontSize = `${state.captionSize}px`;
+  captionEl.style.lineHeight = state.captionLineHeight;
+  captionEl.style.textAlign = state.captionAlign;
+}
+
+function updateCaptionAlignmentIcon() {
+  const alignBtn = document.getElementById('caption-align-cycle');
+  const alignIcons = {
+    left: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M3 4H21V6H3V4ZM3 19H17V21H3V19ZM3 14H21V16H3V14ZM3 9H17V11H3V9Z"></path></svg>',
+    center: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M3 4H21V6H3V4ZM5 19H19V21H5V19ZM3 14H21V16H3V14ZM5 9H19V11H5V9Z"></path></svg>',
+    right: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M3 4H21V6H3V4ZM7 19H21V21H7V19ZM3 14H21V16H3V14ZM7 9H21V11H7V9Z"></path></svg>'
+  };
+  alignBtn.innerHTML = alignIcons[state.captionAlign];
+}
+
+function updateCaptionSlider() {
+  const slider = document.getElementById('caption-slider');
+  const value = parseInt(slider.value);
+  
+  if (!state.activeCaptionControl) state.activeCaptionControl = 'size';
+  
+  if (state.activeCaptionControl === 'size') {
+    state.captionSize = value;
+    slider.min = 12;
+    slider.max = 24;
+    slider.value = state.captionSize;
+  } else {
+    const lineHeightMap = [1.0, 1.2, 1.4, 1.6, 1.8, 2.0];
+    const index = Math.min(Math.floor((value - 12) / 2), 5);
+    state.captionLineHeight = lineHeightMap[index];
+    slider.min = 12;
+    slider.max = 24;
+  }
+  
+  updateCaptionStyle();
+}
+
+// ============================================
+// LEGEND CONTROLS
+// ============================================
+function updateLegendStyle() {
+  renderChart();
+}
+
+function updateLegendVisibilityIcon() {
+  const btn = document.getElementById('legend-visible-toggle');
+  const visibleIcon = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12.0003 3C17.3924 3 21.8784 6.87976 22.8189 12C21.8784 17.1202 17.3924 21 12.0003 21C6.60812 21 2.12215 17.1202 1.18164 12C2.12215 6.87976 6.60812 3 12.0003 3ZM12.0003 19C16.2359 19 19.8603 16.052 20.7777 12C19.8603 7.94803 16.2359 5 12.0003 5C7.7646 5 4.14022 7.94803 3.22278 12C4.14022 16.052 7.7646 19 12.0003 19ZM12.0003 16.5C9.51498 16.5 7.50026 14.4853 7.50026 12C7.50026 9.51472 9.51498 7.5 12.0003 7.5C14.4855 7.5 16.5003 9.51472 16.5003 12C16.5003 14.4853 14.4855 16.5 12.0003 16.5ZM12.0003 14.5C13.381 14.5 14.5003 13.3807 14.5003 12C14.5003 10.6193 13.381 9.5 12.0003 9.5C10.6196 9.5 9.50026 10.6193 9.50026 12C9.50026 13.3807 10.6196 14.5 12.0003 14.5Z"></path></svg>';
+  const hiddenIcon = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M9.34268 18.7819L7.41083 18.2642L8.1983 15.3254C7.00919 14.8874 5.91661 14.2498 4.96116 13.4534L2.80783 15.6067L1.39362 14.1925L3.54695 12.0392C2.35581 10.6103 1.52014 8.87466 1.17578 6.96818L3.14386 6.61035C3.90289 10.8126 7.57931 14.0001 12.0002 14.0001C16.4211 14.0001 20.0976 10.8126 20.8566 6.61035L22.8247 6.96818C22.4803 8.87466 21.6446 10.6103 20.4535 12.0392L22.6068 14.1925L21.1926 15.6067L19.0393 13.4534C18.0838 14.2498 16.9912 14.8874 15.8021 15.3254L16.5896 18.2642L14.6578 18.7819L13.87 15.8418C13.2623 15.9459 12.6376 16.0001 12.0002 16.0001C11.3629 16.0001 10.7381 15.9459 10.1305 15.8418L9.34268 18.7819Z"></path></svg>';
+  btn.innerHTML = state.legendVisible ? visibleIcon : hiddenIcon;
+}
+
+
+
+// ============================================
+// DROPDOWN BEHAVIOR
+// ============================================
+function setupDropdownBehavior() {
+  const allDetails = document.querySelectorAll('.control-section');
+  
+  allDetails.forEach(detail => {
+    detail.addEventListener('toggle', (e) => {
+      if (e.target.open) {
+        allDetails.forEach(other => {
+          if (other !== e.target && other.open) {
+            other.open = false;
+          }
+        });
+      }
+    });
+  });
 }
 
 // ============================================
