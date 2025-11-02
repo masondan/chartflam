@@ -10,8 +10,8 @@ const state = {
     labels: ['Category A', 'Category B', 'Category C'],
     datasets: [{
       data: [30, 50, 20],
-      backgroundColor: ['#8A2BE2', '#4B0082', '#FFD700'],
-      borderColor: ['#8A2BE2', '#4B0082', '#FFD700'],
+      backgroundColor: ['#6A5ACD', '#FFDAB9', '#66C0B4'],
+      borderColor: ['#6A5ACD', '#FFDAB9', '#66C0B4'],
       borderWidth: 1
     }]
   },
@@ -449,9 +449,6 @@ function selectChartType(type) {
   initColorControls();
   renderChart();
   updateSmoothingVisibility();
-
-  // Announce change to screen readers
-  showFeedback(`Switched to ${type} chart`, 'success');
 }
 
 // ============================================
@@ -746,7 +743,7 @@ function updateSegmentColor(index, color) {
 
 function ensureColorsMatchData() {
   const dataLength = state.chartData.labels.length;
-  const colors = ['#8A2BE2', '#4B0082', '#FFD700', '#DC143C', '#4f0388', '#00CED1', '#FF6347', '#32CD32'];
+  const colors = ['#6A5ACD', '#FFDAB9', '#66C0B4', '#E6E6FA', '#DDA0DD', '#ADD8E6', '#FAEBD7', '#C0C0C0'];
   
   while (state.chartData.datasets[0].backgroundColor.length < dataLength) {
     const colorIndex = state.chartData.datasets[0].backgroundColor.length % colors.length;
