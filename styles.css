@@ -203,6 +203,7 @@ body {
 .chart-title {
   font-size: 1.5rem;
   font-weight: 700;
+  margin-top: var(--spacing-sm); /* Pushes the title down slightly */
   margin-bottom: var(--spacing-lg);
   color: var(--text-dark);
 }
