@@ -20,6 +20,7 @@ const state = {
   chartBackgroundColor: '#FFFFFF',
   smoothingValue: 5,
   gapValue: 4,
+  donutCutoutPercentage: 50,
   activeControl: 'corner',
   titleFont: 'Inter',
   titleColor: '#555555',
@@ -273,6 +274,9 @@ function startApp() {
               </button>
               <button class="smooth-toggle" data-type="gap" aria-label="Slice gap" title="Slice gap">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M18 2H6V4H18V2ZM16.9497 9.44975L12 4.5L7.05273 9.44727L11 9.44826V14.5501L7.05078 14.55L12.0005 19.5L16.9502 14.5503L13 14.5502V9.44876L16.9497 9.44975ZM18 20V22H6V20H18Z"></path></svg>
+              </button>
+              <button class="smooth-toggle" data-type="hole" id="donut-hole-toggle" aria-label="Donut hole size" title="Donut hole size">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M2.04932 13H4.06184C4.55393 16.9463 7.92032 20 11.9999 20C16.0796 20 19.4459 16.9463 19.938 13H21.9506C21.4488 18.0533 17.1853 22 11.9999 22C6.81459 22 2.55104 18.0533 2.04932 13ZM2.04932 11C2.55104 5.94668 6.81459 2 11.9999 2C17.1853 2 21.4488 5.94668 21.9506 11H19.938C19.4459 7.05369 16.0796 4 11.9999 4C7.92032 4 4.55393 7.05369 4.06184 11H2.04932ZM11.9999 14C10.8954 14 9.99994 13.1046 9.99994 12C9.99994 10.8954 10.8954 10 11.9999 10C13.1045 10 13.9999 10.8954 13.9999 12C13.9999 13.1046 13.1045 14 11.9999 14Z"></path></svg>
               </button>
               <input type="range" 
                      id="smoothing-slider"
@@ -859,6 +863,11 @@ function renderChart() {
     state.chartData.datasets[0].borderWidth = state.gapValue;
     state.chartData.datasets[0].borderColor = state.chartBackgroundColor;
   }
+  
+  // Apply donut hole size
+  if (state.currentChartType === 'donut') {
+    config.options.cutout = `${state.donutCutoutPercentage}%`;
+  }
 
   // Create new chart
   try {
@@ -1147,10 +1156,16 @@ function updateBackgroundColor(bgType) {
 function updateSmoothing() {
   const value = parseInt(document.getElementById('smoothing-slider').value);
   
-  if (state.activeControl === 'corner') {
-    state.smoothingValue = value;
-  } else {
-    state.gapValue = value;
+  switch (state.activeControl) {
+    case 'corner':
+      state.smoothingValue = value;
+      break;
+    case 'gap':
+      state.gapValue = value;
+      break;
+    case 'hole':
+      state.donutCutoutPercentage = value;
+      break;
   }
   
   renderChart();
@@ -1158,19 +1173,42 @@ function updateSmoothing() {
 
 function updateSmoothingSlider() {
   const slider = document.getElementById('smoothing-slider');
-  if (state.activeControl === 'corner') {
-    slider.value = state.smoothingValue;
-  } else {
-    slider.value = state.gapValue;
+  switch (state.activeControl) {
+    case 'corner':
+      slider.min = 0;
+      slider.max = 20;
+      slider.value = state.smoothingValue;
+      break;
+    case 'gap':
+      slider.min = 0;
+      slider.max = 20;
+      slider.value = state.gapValue;
+      break;
+    case 'hole':
+      slider.min = 0;
+      slider.max = 90;
+      slider.value = state.donutCutoutPercentage;
+      break;
   }
 }
 
 function updateSmoothingVisibility() {
   const styleControl = document.getElementById('style-control');
-  if (state.currentChartType === 'pie' || state.currentChartType === 'donut') {
-    styleControl.style.display = 'block';
-  } else {
-    styleControl.style.display = 'none';
+  const holeToggle = document.getElementById('donut-hole-toggle');
+  
+  const isPieOrDonut = state.currentChartType === 'pie' || state.currentChartType === 'donut';
+  styleControl.style.display = isPieOrDonut ? 'block' : 'none';
+  
+  if (isPieOrDonut) {
+    holeToggle.style.display = state.currentChartType === 'donut' ? 'flex' : 'none';
+    
+    // If hole was active and we switch to pie, reset active control
+    if (state.currentChartType === 'pie' && state.activeControl === 'hole') {
+      state.activeControl = 'corner';
+      document.querySelector('.smooth-toggle[data-type="corner"]').classList.add('active');
+      document.querySelector('.smooth-toggle[data-type="hole"]').classList.remove('active');
+      updateSmoothingSlider();
+    }
   }
 }
 
