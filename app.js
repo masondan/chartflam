@@ -46,6 +46,7 @@ const state = {
   barOrientation: 'vertical',
   barBorderRadius: 10,
   barCategoryPercentage: 0.8, // Controls bar thickness (closer together)
+  barAspectRatio: 1, // Default aspect ratio (1:1)
   axisVisible: true,
   axisColor: '#555555',
   axisSize: 12,
@@ -229,25 +230,7 @@ function startApp() {
         <!-- Data Input -->
         <details class="control-section">
           <summary aria-expanded="false" aria-controls="data-content">Data</summary>
-          <div id="data-content" class="control-content">
-            <div class="data-tabs" role="tablist" aria-label="Data input method">
-              <button class="tab-btn active" data-tab="manual" role="tab" aria-selected="true" aria-controls="manual-input">Manual</button>
-              <button class="tab-btn" data-tab="csv" role="tab" aria-selected="false" aria-controls="csv-input">CSV</button>
-            </div>
-            <div id="manual-input" class="tab-content active" role="tabpanel" aria-labelledby="manual-tab">
-              <div id="manual-rows" role="list" aria-label="Data entries"></div>
-              <button class="btn-add" id="add-row-btn" aria-label="Add new data row">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M11 11V7H13V11H17V13H13V17H11V13H7V11H11ZM12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12C22 17.5228 17.5228 22 12 22ZM12 20C16.4183 20 20 16.4183 20 12C20 7.58172 16.4183 4 12 4C7.58172 4 4 7.58172 4 12C4 16.4183 7.58172 20 12 20Z"></path></svg>
-              </button>
-            </div>
-            <div id="csv-input" class="tab-content" role="tabpanel" aria-labelledby="csv-tab">
-              <textarea id="csv-textarea" 
-                        placeholder="Paste CSV data here&#10;Format: label,value&#10;Example:&#10;Category A,30&#10;Category B,50&#10;Category C,20"
-                        aria-label="CSV data input"
-                        maxlength="5000"></textarea>
-              <button class="btn btn-secondary" id="apply-csv-btn" aria-label="Apply CSV data to chart">Apply CSV Data</button>
-            </div>
-          </div>
+          <div id="data-content" class="control-content"></div>
         </details>
 
         <!-- Colours -->
@@ -272,28 +255,10 @@ function startApp() {
           </div>
         </details>
 
-        <!-- Style (for pie/donut only) -->
+        <!-- Style (for pie/donut/bar) -->
         <details class="control-section" id="style-control">
           <summary aria-expanded="false" aria-controls="style-content">Style</summary>
-          <div id="style-content" class="control-content">
-            <div class="text-controls">
-              <button class="smooth-toggle active" data-type="corner" aria-label="Corner smoothing" title="Corner smoothing">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M21 19V21H19V19H21ZM17 19V21H15V19H17ZM13 19V21H11V19H13ZM9 19V21H7V19H9ZM5 19V21H3V19H5ZM21 15V17H19V15H21ZM5 15V17H3V15H5ZM5 11V13H3V11H5ZM16 3C18.6874 3 20.8817 5.12366 20.9954 7.78322L21 8V13H19V8C19 6.40893 17.7447 5.09681 16.1756 5.00512L16 5H11V3H16ZM5 7V9H3V7H5ZM5 3V5H3V3H5ZM9 3V5H7V3H9Z"></path></svg>
-              </button>
-              <button class="smooth-toggle" data-type="gap" aria-label="Slice gap" title="Slice gap">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M18 2H6V4H18V2ZM16.9497 9.44975L12 4.5L7.05273 9.44727L11 9.44826V14.5501L7.05078 14.55L12.0005 19.5L16.9502 14.5503L13 14.5502V9.44876L16.9497 9.44975ZM18 20V22H6V20H18Z"></path></svg>
-              </button>
-              <button class="smooth-toggle" data-type="hole" id="donut-hole-toggle" aria-label="Donut hole size" title="Donut hole size">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M2.04932 13H4.06184C4.55393 16.9463 7.92032 20 11.9999 20C16.0796 20 19.4459 16.9463 19.938 13H21.9506C21.4488 18.0533 17.1853 22 11.9999 22C6.81459 22 2.55104 18.0533 2.04932 13ZM2.04932 11C2.55104 5.94668 6.81459 2 11.9999 2C17.1853 2 21.4488 5.94668 21.9506 11H19.938C19.4459 7.05369 16.0796 4 11.9999 4C7.92032 4 4.55393 7.05369 4.06184 11H2.04932ZM11.9999 14C10.8954 14 9.99994 13.1046 9.99994 12C9.99994 10.8954 10.8954 10 11.9999 10C13.1045 10 13.9999 10.8954 13.9999 12C13.9999 13.1046 13.1045 14 11.9999 14Z"></path></svg>
-              </button>
-              <input type="range" 
-                     id="smoothing-slider"
-                     class="text-slider" 
-                     min="0" 
-                     max="20" 
-                     value="${state.smoothingValue}">
-            </div>
-          </div>
+          <div id="style-content" class="control-content"></div>
         </details>
 
         <!-- Title -->
@@ -441,7 +406,9 @@ function startApp() {
   // Defer initialization to ensure the DOM is ready
   setTimeout(() => {
     initEventListeners();
+    initDataControls();
     initManualInput();
+    initStyleControls();
     initColorControls();
     updateSmoothingVisibility();
     renderChart();
@@ -480,31 +447,6 @@ function initEventListeners() {
     });
   });
 
-  // Data tabs
-  document.querySelectorAll('.tab-btn').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      switchDataTab(e.currentTarget.dataset.tab);
-    });
-  });
-
-  // Add row button
-  document.getElementById('add-row-btn').addEventListener('click', () => {
-    if (state.chartData.labels.length >= validation.maxDataPoints) {
-      showFeedback(`Maximum ${validation.maxDataPoints} data points allowed`, 'error');
-      return;
-    }
-    addManualRow();
-  });
-
-  // Apply CSV button
-  document.getElementById('apply-csv-btn').addEventListener('click', () => {
-    updateDataFromCSV();
-  });
-
-  // CSV textarea (with debouncing)
-  const csvTextarea = document.getElementById('csv-textarea');
-  csvTextarea.addEventListener('input', debounce(updateDataFromCSV, 500));
-
   // Background color options
   const bgWhite = document.querySelector('.bg-option[data-bg="white"]');
   const bgTransparent = document.querySelector('.bg-option[data-bg="transparent"]');
@@ -541,23 +483,6 @@ function initEventListeners() {
       }
     });
   });
-
-  // Smoothing toggle buttons
-  const smoothToggles = document.querySelectorAll('.smooth-toggle');
-  smoothToggles.forEach(btn => {
-    btn.addEventListener('click', () => {
-      smoothToggles.forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      state.activeControl = btn.dataset.type;
-      updateSmoothingSlider();
-    });
-  });
-
-  // Smoothing slider
-  const smoothingSlider = document.getElementById('smoothing-slider');
-  smoothingSlider.addEventListener('input', debounce(() => {
-    updateSmoothing();
-  }, 100));
 
   // Title controls
   document.getElementById('title-input').addEventListener('input', debounce(() => {
@@ -711,6 +636,11 @@ function initEventListeners() {
   document.getElementById('download-btn').addEventListener('click', downloadChart);
   
   // Global keyboard shortcuts
+  // Add event listeners for bar orientation buttons if they exist
+  const verticalBtn = document.getElementById('bar-vertical-btn');
+  const horizontalBtn = document.getElementById('bar-horizontal-btn');
+  if (verticalBtn) verticalBtn.addEventListener('click', () => setBarOrientation('vertical'));
+  if (horizontalBtn) horizontalBtn.addEventListener('click', () => setBarOrientation('horizontal'));
   document.addEventListener('keydown', handleKeyboardShortcuts);
   
   // Update details elements aria-expanded on toggle
@@ -728,8 +658,6 @@ function initEventListeners() {
 function handleKeyboardShortcuts(e) {
   const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
   const modifier = isMac ? e.metaKey : e.ctrlKey;
-  
-
   
   // Download: Ctrl/Cmd + S
   if (modifier && e.key === 's') {
@@ -791,7 +719,9 @@ function selectChartType(type) {
   ensureColorsMatchData();
   
   // Re-initialize inputs and render
+  initDataControls();
   initManualInput();
+  initStyleControls();
   initColorControls();
   renderChart();
   updateSmoothingVisibility();
@@ -815,7 +745,6 @@ function renderChart() {
   const container = document.querySelector('.chart-canvas-container');
   const width = container.clientWidth;
   canvas.width = width;
-  canvas.height = width;
   
   // Destroy existing chart
   if (state.chart) {
@@ -829,7 +758,7 @@ function renderChart() {
     type: chartType,
     data: state.chartData,
     options: {
-      responsive: false,
+      responsive: true,
       layout: {
         padding: {
           top: 5,
@@ -876,9 +805,13 @@ function renderChart() {
     // Set orientation
     config.options.indexAxis = state.barOrientation === 'vertical' ? 'x' : 'y';
 
+    // Set aspect ratio
+    config.options.aspectRatio = state.barAspectRatio;
+
     // Set bar styles
     state.chartData.datasets[0].borderRadius = state.barBorderRadius;
     state.chartData.datasets[0].categoryPercentage = state.barCategoryPercentage;
+    state.chartData.datasets[0].borderWidth = 0; // Fix for faint line artifact
 
     // Configure axes
     const axisOptions = {
@@ -929,10 +862,134 @@ function renderChart() {
 }
 
 // ============================================
+// DATA CONTROLS
+// Dynamically builds the data input section based on chart type
+// ============================================
+function initDataControls() {
+  const container = document.getElementById('data-content');
+  if (!container) return;
+
+  if (state.currentChartType === 'bar') {
+    container.innerHTML = `
+      <textarea id="csv-textarea" 
+                placeholder="Paste CSV data here&#10;Format: label,value&#10;Example:&#10;Jan,12&#10;Feb,19&#10;Mar,15"
+                aria-label="CSV data input"
+                maxlength="5000"></textarea>
+      <div class="bar-controls">
+        <button class="text-control-btn active" id="bar-vertical-btn" title="Vertical bars">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M3 12H7V21H3V12ZM17 8H21V21H17V8ZM10 2H14V21H10V2Z"></path></svg>
+        </button>
+        <button class="text-control-btn" id="bar-horizontal-btn" title="Horizontal bars">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3V7H3V3H12ZM16 17V21H3V17H16ZM22 10V14H3V10H22Z"></path></svg>
+        </button>
+      </div>
+    `;
+  } else {
+    container.innerHTML = `
+      <div class="data-tabs" role="tablist" aria-label="Data input method">
+        <button class="tab-btn active" data-tab="manual" role="tab" aria-selected="true" aria-controls="manual-input">Manual</button>
+        <button class="tab-btn" data-tab="csv" role="tab" aria-selected="false" aria-controls="csv-input">CSV</button>
+      </div>
+      <div id="manual-input" class="tab-content active" role="tabpanel" aria-labelledby="manual-tab">
+        <div id="manual-rows" role="list" aria-label="Data entries"></div>
+        <button class="btn-add" id="add-row-btn" aria-label="Add new data row">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M11 11V7H13V11H17V13H13V17H11V13H7V11H11ZM12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12C22 17.5228 17.5228 22 12 22ZM12 20C16.4183 20 20 16.4183 20 12C20 7.58172 16.4183 4 12 4C7.58172 4 4 7.58172 4 12C4 16.4183 7.58172 20 12 20Z"></path></svg>
+        </button>
+      </div>
+      <div id="csv-input" class="tab-content" role="tabpanel" aria-labelledby="csv-tab">
+        <textarea id="csv-textarea" 
+                  placeholder="Paste CSV data here&#10;Format: label,value&#10;Example:&#10;Category A,30&#10;Category B,50&#10;Category C,20"
+                  aria-label="CSV data input"
+                  maxlength="5000"></textarea>
+        <button class="btn btn-secondary" id="apply-csv-btn" aria-label="Apply CSV data to chart">Apply CSV Data</button>
+      </div>
+    `;
+  }
+  // Re-attach listeners for dynamically created elements
+  const csvTextarea = document.getElementById('csv-textarea');
+  if(csvTextarea) csvTextarea.addEventListener('input', debounce(updateDataFromCSV, 500));
+
+  if (state.currentChartType !== 'bar') {
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.addEventListener('click', (e) => switchDataTab(e.currentTarget.dataset.tab)));
+    document.getElementById('add-row-btn').addEventListener('click', () => {
+      if (state.chartData.labels.length >= validation.maxDataPoints) {
+        showFeedback(`Maximum ${validation.maxDataPoints} data points allowed`, 'error');
+        return;
+      }
+      addManualRow();
+    });
+    document.getElementById('apply-csv-btn').addEventListener('click', updateDataFromCSV);
+  }
+}
+
+// ============================================
+// STYLE CONTROLS
+// Dynamically builds the style section based on chart type
+// ============================================
+function initStyleControls() {
+  const container = document.getElementById('style-content');
+  if (!container) return;
+
+  if (state.currentChartType === 'bar') {
+    container.innerHTML = `
+      <div class="text-controls">
+        <button class="text-control-btn active" data-type="corner" title="Bar Rounding">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M21 19V21H19V19H21ZM17 19V21H15V19H17ZM13 19V21H11V19H13ZM9 19V21H7V19H9ZM5 19V21H3V19H5ZM21 15V17H19V15H21ZM5 15V17H3V15H5ZM5 11V13H3V11H5ZM16 3C18.6874 3 20.8817 5.12366 20.9954 7.78322L21 8V13H19V8C19 6.40893 17.7447 5.09681 16.1756 5.00512L16 5H11V3H16ZM5 7V9H3V7H5ZM5 3V5H3V3H5ZM9 3V5H7V3H9Z"></path></svg>
+        </button>
+        <button class="text-control-btn" data-type="gap" title="Bar Spacing">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M18 2H6V4H18V2ZM16.9497 9.44975L12 4.5L7.05273 9.44727L11 9.44826V14.5501L7.05078 14.55L12.0005 19.5L16.9502 14.5503L13 14.5502V9.44876L16.9497 9.44975ZM18 20V22H6V20H18Z"></path></svg>
+        </button>
+        <button class="text-control-btn" data-type="resize" title="Chart Depth">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M21 3C21.5523 3 22 3.44772 22 4V20C22 20.5523 21.5523 21 21 21H3C2.44772 21 2 20.5523 2 20V4C2 3.44772 2.44772 3 3 3H21ZM20 5H4V19H20V5ZM13 17V15H16V12H18V17H13ZM11 7V9H8V12H6V7H11Z"></path></svg>
+        </button>
+        <input type="range" id="smoothing-slider" class="text-slider" min="0" max="20" value="${state.smoothingValue}">
+      </div>
+    `;
+  } else if (state.currentChartType === 'pie' || state.currentChartType === 'donut') {
+    container.innerHTML = `
+      <div class="text-controls">
+        <button class="smooth-toggle active" data-type="corner" aria-label="Corner smoothing" title="Corner smoothing">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M21 19V21H19V19H21ZM17 19V21H15V19H17ZM13 19V21H11V19H13ZM9 19V21H7V19H9ZM5 19V21H3V19H5ZM21 15V17H19V15H21ZM5 15V17H3V15H5ZM5 11V13H3V11H5ZM16 3C18.6874 3 20.8817 5.12366 20.9954 7.78322L21 8V13H19V8C19 6.40893 17.7447 5.09681 16.1756 5.00512L16 5H11V3H16ZM5 7V9H3V7H5ZM5 3V5H3V3H5ZM9 3V5H7V3H9Z"></path></svg>
+        </button>
+        <button class="smooth-toggle" data-type="gap" aria-label="Slice gap" title="Slice gap">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M18 2H6V4H18V2ZM16.9497 9.44975L12 4.5L7.05273 9.44727L11 9.44826V14.5501L7.05078 14.55L12.0005 19.5L16.9502 14.5503L13 14.5502V9.44876L16.9497 9.44975ZM18 20V22H6V20H18Z"></path></svg>
+        </button>
+        <button class="smooth-toggle" data-type="hole" id="donut-hole-toggle" aria-label="Donut hole size" title="Donut hole size">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M2.04932 13H4.06184C4.55393 16.9463 7.92032 20 11.9999 20C16.0796 20 19.4459 16.9463 19.938 13H21.9506C21.4488 18.0533 17.1853 22 11.9999 22C6.81459 22 2.55104 18.0533 2.04932 13ZM2.04932 11C2.55104 5.94668 6.81459 2 11.9999 2C17.1853 2 21.4488 5.94668 21.9506 11H19.938C19.4459 7.05369 16.0796 4 11.9999 4C7.92032 4 4.55393 7.05369 4.06184 11H2.04932ZM11.9999 14C10.8954 14 9.99994 13.1046 9.99994 12C9.99994 10.8954 10.8954 10 11.9999 10C13.1045 10 13.9999 10.8954 13.9999 12C13.9999 13.1046 13.1045 14 11.9999 14Z"></path></svg>
+        </button>
+        <input type="range" id="smoothing-slider" class="text-slider" min="0" max="20" value="${state.smoothingValue}">
+      </div>
+    `;
+  } else {
+    container.innerHTML = '';
+  }
+
+  // Re-attach listeners for dynamically created elements
+  const styleToggles = document.querySelectorAll('#style-content button[data-type]');
+  styleToggles.forEach(btn => {
+    btn.addEventListener('click', () => {
+      styleToggles.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      state.activeControl = btn.dataset.type;
+      updateSmoothingSlider();
+    });
+  });
+
+  const smoothingSlider = document.getElementById('smoothing-slider');
+  if(smoothingSlider) {
+    smoothingSlider.addEventListener('input', debounce(() => {
+      updateSmoothing();
+    }, 100));
+  }
+}
+
+// ============================================
 // DATA INPUT - MANUAL
 // ============================================
 function initManualInput() {
   const container = document.getElementById('manual-rows');
+  if (!container) return; // Exit if manual input isn't on the page
+  
   container.innerHTML = '';
   
   state.chartData.labels.forEach((label, index) => {
@@ -942,6 +999,8 @@ function initManualInput() {
 
 function addManualRow(label = '', value = '') {
   const container = document.getElementById('manual-rows');
+  if (!container) return;
+  
   const row = document.createElement('div');
   row.className = 'manual-row';
   row.setAttribute('role', 'listitem');
@@ -1107,11 +1166,12 @@ function updateDataFromCSV() {
       ensureColorsMatchData();
       renderChart();
       initManualInput();
+      initDataControls();
       initColorControls();
     }
   } catch (error) {
     console.error('Error parsing CSV:', error);
-    alert('Error parsing CSV data. Please check the format.');
+    showFeedback('Error parsing CSV. Check format.', 'error');
   }
 }
 
@@ -1206,16 +1266,22 @@ function updateBackgroundColor(bgType) {
 function updateSmoothing() {
   const value = parseInt(document.getElementById('smoothing-slider').value);
   
-  switch (state.activeControl) {
-    case 'corner':
-      state.smoothingValue = value;
-      break;
-    case 'gap':
-      state.gapValue = value;
-      break;
-    case 'hole':
-      state.donutCutoutPercentage = value;
-      break;
+  if (state.currentChartType === 'bar') {
+    switch (state.activeControl) {
+      case 'corner':
+        state.barBorderRadius = value;
+        break;
+      case 'gap':
+        state.barCategoryPercentage = value / 100;
+        break;
+      case 'resize':
+        state.barAspectRatio = value / 100;
+        break;
+    }
+  } else { // Pie/Donut logic
+    if (state.activeControl === 'corner') state.smoothingValue = value;
+    if (state.activeControl === 'gap') state.gapValue = value;
+    if (state.activeControl === 'hole') state.donutCutoutPercentage = value;
   }
   
   renderChart();
@@ -1223,22 +1289,44 @@ function updateSmoothing() {
 
 function updateSmoothingSlider() {
   const slider = document.getElementById('smoothing-slider');
-  switch (state.activeControl) {
-    case 'corner':
-      slider.min = 0;
-      slider.max = 20;
-      slider.value = state.smoothingValue;
-      break;
-    case 'gap':
-      slider.min = 0;
-      slider.max = 20;
-      slider.value = state.gapValue;
-      break;
-    case 'hole':
-      slider.min = 0;
-      slider.max = 90;
-      slider.value = state.donutCutoutPercentage;
-      break;
+  if (!slider) return;
+
+  if (state.currentChartType === 'bar') {
+    switch (state.activeControl) {
+      case 'corner':
+        slider.min = 0;
+        slider.max = 40; // More range for bar corners
+        slider.value = state.barBorderRadius;
+        break;
+      case 'gap':
+        slider.min = 40; // Corresponds to 0.4 - wider minimum
+        slider.max = 100; // Corresponds to 1.0
+        slider.value = state.barCategoryPercentage * 100;
+        break;
+      case 'resize':
+        slider.min = 100; // Corresponds to 1.0 aspect ratio
+        slider.max = 200; // Corresponds to 2.0 aspect ratio (up to 16:8)
+        slider.value = state.barAspectRatio * 100;
+        break;
+    }
+  } else { // Pie/Donut logic
+    switch (state.activeControl) {
+      case 'corner':
+        slider.min = 0;
+        slider.max = 20;
+        slider.value = state.smoothingValue;
+        break;
+      case 'gap':
+        slider.min = 0;
+        slider.max = 20;
+        slider.value = state.gapValue;
+        break;
+      case 'hole':
+        slider.min = 0;
+        slider.max = 90;
+        slider.value = state.donutCutoutPercentage;
+        break;
+    }
   }
 }
 
@@ -1247,9 +1335,9 @@ function updateSmoothingVisibility() {
   const holeToggle = document.getElementById('donut-hole-toggle');
   
   const isPieOrDonut = state.currentChartType === 'pie' || state.currentChartType === 'donut';
-  styleControl.style.display = isPieOrDonut ? 'block' : 'none';
+  styleControl.style.display = isPieOrDonut || state.currentChartType === 'bar' ? '' : 'none';
   
-  if (isPieOrDonut) {
+  if (isPieOrDonut && holeToggle) {
     holeToggle.style.display = state.currentChartType === 'donut' ? 'flex' : 'none';
     
     // If hole was active and we switch to pie, reset active control
@@ -1260,6 +1348,24 @@ function updateSmoothingVisibility() {
       updateSmoothingSlider();
     }
   }
+}
+
+function setBarOrientation(orientation) {
+  if (state.barOrientation === orientation) return;
+
+  state.barOrientation = orientation;
+
+  const verticalBtn = document.getElementById('bar-vertical-btn');
+  const horizontalBtn = document.getElementById('bar-horizontal-btn');
+
+  if (orientation === 'vertical') {
+    verticalBtn.classList.add('active');
+    horizontalBtn.classList.remove('active');
+  } else {
+    horizontalBtn.classList.add('active');
+    verticalBtn.classList.remove('active');
+  }
+  renderChart();
 }
 
 function updateTitle() {

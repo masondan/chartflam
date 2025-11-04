@@ -509,6 +509,13 @@ max-width: 100%;
   border-color: var(--copy-active);
 }
 
+/* Bar chart orientation controls */
+.bar-controls {
+  display: flex;
+  justify-content: center;
+  gap: var(--spacing-xs);
+}
+
 /* ============================================
    COLOR CONTROLS
    ============================================ */
