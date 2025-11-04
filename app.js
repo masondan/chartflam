@@ -42,6 +42,14 @@ const state = {
   legendPosition: 'bottom',
   legendSize: 12,
   legendColor: '#555555',
+  // New bar chart properties
+  barOrientation: 'vertical',
+  barBorderRadius: 10,
+  barCategoryPercentage: 0.8, // Controls bar thickness (closer together)
+  axisVisible: true,
+  axisColor: '#555555',
+  axisSize: 12,
+  axisBold: false,
   chart: null,
   isProcessing: false
 };
@@ -744,6 +752,9 @@ function handleKeyboardShortcuts(e) {
 // CHART TYPE SELECTION
 // ============================================
 function selectChartType(type) {
+  // Prevent re-rendering if the same chart type is selected
+  if (type === state.currentChartType) return;
+
   state.currentChartType = type;
   
   // Update active state and ARIA attributes
@@ -758,12 +769,20 @@ function selectChartType(type) {
   
   // Update placeholder data based on type
   if (type === 'bar' || type === 'line') {
-    state.chartData.labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May'];
-    state.chartData.datasets[0].data = [12, 19, 15, 25, 22];
+    const labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May'];
+    const data = [12, 19, 15, 25, 22];
+    state.chartData.labels = labels;
+    state.chartData.datasets[0].data = data;
+    // For bar charts, set the single color immediately
+    if (type === 'bar') {
+      const singleColor = '#6A5ACD';
+      state.chartData.datasets[0].backgroundColor = Array(labels.length).fill(singleColor);
+      state.chartData.datasets[0].borderColor = Array(labels.length).fill(singleColor);
+    }
   } else if (type === 'pictogram') {
     state.chartData.labels = ['Completed', 'Remaining'];
     state.chartData.datasets[0].data = [67, 33];
-  } else {
+  } else { // pie, donut
     state.chartData.labels = ['Category A', 'Category B', 'Category C'];
     state.chartData.datasets[0].data = [30, 50, 20];
   }
@@ -852,6 +871,37 @@ function renderChart() {
     }
   };
 
+  // Apply bar chart specific styles
+  if (state.currentChartType === 'bar') {
+    // Set orientation
+    config.options.indexAxis = state.barOrientation === 'vertical' ? 'x' : 'y';
+
+    // Set bar styles
+    state.chartData.datasets[0].borderRadius = state.barBorderRadius;
+    state.chartData.datasets[0].categoryPercentage = state.barCategoryPercentage;
+
+    // Configure axes
+    const axisOptions = {
+      display: state.axisVisible,
+      grid: {
+        display: false // Remove grid lines
+      },
+      ticks: {
+        color: state.axisColor,
+        font: {
+          size: state.axisSize,
+          weight: state.axisBold ? 'bold' : 'normal'
+        }
+      }
+    };
+    config.options.scales = {
+      x: { ...axisOptions },
+      y: { ...axisOptions }
+    };
+
+    // Hide legend by default for bar charts
+    config.options.plugins.legend.display = false;
+  }
   // Apply smoothing and gap for pie/donut charts
   if (state.currentChartType === 'pie' || state.currentChartType === 'donut') {
     config.options.elements = {
