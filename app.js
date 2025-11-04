@@ -51,6 +51,14 @@ const state = {
   axisColor: '#555555',
   axisSize: 12,
   axisBold: false,
+  // New line chart properties
+  lineChartLineColor: '#999999',
+  lineChartMarkerColor: '#555555',
+  lineMarkerVisible: true,
+  lineMarkerStyle: 'circle',
+  lineMarkerSize: 5,
+  lineTension: 0,
+  lineWidth: 3,
   chart: null,
   isProcessing: false
 };
@@ -702,11 +710,20 @@ function selectChartType(type) {
     const data = [12, 19, 15, 25, 22];
     state.chartData.labels = labels;
     state.chartData.datasets[0].data = data;
-    // For bar charts, set the single color immediately
+    // For bar/line charts, set the single color immediately
     if (type === 'bar') {
       const singleColor = '#6A5ACD';
       state.chartData.datasets[0].backgroundColor = Array(labels.length).fill(singleColor);
       state.chartData.datasets[0].borderColor = Array(labels.length).fill(singleColor);
+    } else if (type === 'line') {
+      state.activeControl = 'smoothing'; // Set default active control for line style
+      // Use a default color for the line itself
+      const singleColor = '#999999'; // Default grey for the line
+      state.chartData.datasets[0].backgroundColor = singleColor; // Chart.js uses this for line color
+      state.chartData.datasets[0].borderColor = singleColor;
+      // We will handle marker colors separately later
+      // For now, ensure the old multi-color array is replaced
+      state.chartData.datasets[0].pointBackgroundColor = Array(labels.length).fill(state.lineChartMarkerColor);
     }
   } else if (type === 'pictogram') {
     state.chartData.labels = ['Completed', 'Remaining'];
@@ -836,6 +853,41 @@ function renderChart() {
 
     // Hide legend by default for bar charts
     config.options.plugins.legend.display = false;
+  } else if (state.currentChartType === 'line') {
+    // Set aspect ratio to square
+    config.options.aspectRatio = state.barAspectRatio; // Re-use bar aspect ratio state
+
+    // Set line and marker colors from state
+    state.chartData.datasets[0].borderColor = state.lineChartLineColor;
+    state.chartData.datasets[0].pointBackgroundColor = state.lineChartMarkerColor;
+    // Set line style properties
+    state.chartData.datasets[0].tension = state.lineTension;
+    state.chartData.datasets[0].borderWidth = state.lineWidth;
+
+    state.chartData.datasets[0].pointBorderColor = state.lineChartMarkerColor;
+    state.chartData.datasets[0].pointRadius = state.lineMarkerVisible ? state.lineMarkerSize : 0;
+    state.chartData.datasets[0].pointHoverRadius = state.lineMarkerVisible ? state.lineMarkerSize + 2 : 0;
+    state.chartData.datasets[0].pointStyle = state.lineMarkerStyle;
+
+    // Configure axes for line chart
+    const axisOptions = {
+      display: state.axisVisible,
+      ticks: {
+        color: state.axisColor,
+        font: {
+          size: state.axisSize,
+          weight: state.axisBold ? 'bold' : 'normal'
+        }
+      }
+    };
+    config.options.scales = {
+      x: { ...axisOptions, grid: { display: false } }, // No vertical grid lines
+      y: { ...axisOptions, grid: { display: true, color: '#e0e0e0' } } // Horizontal grid lines
+    };
+
+    // Hide legend by default for line charts
+    config.options.plugins.legend.display = false;
+
   }
   // Apply smoothing and gap for pie/donut charts
   if (state.currentChartType === 'pie' || state.currentChartType === 'donut') {
@@ -871,21 +923,63 @@ function initDataControls() {
   const container = document.getElementById('data-content');
   if (!container) return;
 
-  if (state.currentChartType === 'bar') {
+  if (state.currentChartType === 'bar' || state.currentChartType === 'line') {
     container.innerHTML = `
       <textarea id="csv-textarea" 
                 placeholder="Paste CSV data here&#10;Format: label,value&#10;Example:&#10;Jan,12&#10;Feb,19&#10;Mar,15"
                 aria-label="CSV data input"
                 maxlength="5000"></textarea>
-      <div class="bar-controls">
-        <button class="text-control-btn active" id="bar-vertical-btn" title="Vertical bars">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M3 12H7V21H3V12ZM17 8H21V21H17V8ZM10 2H14V21H10V2Z"></path></svg>
-        </button>
-        <button class="text-control-btn" id="bar-horizontal-btn" title="Horizontal bars">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3V7H3V3H12ZM16 17V21H3V17H16ZM22 10V14H3V10H22Z"></path></svg>
-        </button>
-      </div>
     `;
+    if (state.currentChartType === 'bar') {
+      container.innerHTML += `
+        <div class="bar-controls">
+          <button class="text-control-btn active" id="bar-vertical-btn" title="Vertical bars">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M3 12H7V21H3V12ZM17 8H21V21H17V8ZM10 2H14V21H10V2Z"></path></svg>
+          </button>
+          <button class="text-control-btn" id="bar-horizontal-btn" title="Horizontal bars">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3V7H3V3H12ZM16 17V21H3V17H16ZM22 10V14H3V10H22Z"></path></svg>
+          </button>
+        </div>
+      `;
+    } else if (state.currentChartType === 'line') {
+      container.innerHTML += `
+        <div class="text-controls" style="margin-top: var(--spacing-sm);">
+          <button class="text-control-btn active" id="marker-style-circle" title="Circle markers">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12C22 17.5228 17.5228 22 12 22ZM12 20C16.4183 20 20 16.4183 20 12C20 7.58172 16.4183 4 12 4C7.58172 4 4 7.58172 4 12C4 16.4183 7.58172 20 12 20Z"></path></svg>
+          </button>
+          <button class="text-control-btn" id="marker-style-diamond" title="Diamond markers">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M4.03607 10.7336C3.43329 11.4703 3.43329 12.5298 4.03607 13.2665L11.2259 22.0541C11.626 22.5431 12.3737 22.5431 12.7738 22.0541L19.9637 13.2665C20.5664 12.5298 20.5664 11.4703 19.9637 10.7336L12.7738 1.94599C12.3737 1.45697 11.626 1.45697 11.2259 1.94599L4.03607 10.7336ZM11.9999 4.15841L18.4157 12L11.9999 19.8417L5.58398 12L11.9999 4.15841Z"></path></svg>
+          </button>
+          <button class="text-control-btn" id="marker-style-square" title="Square markers">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M4 3H20C20.5523 3 21 3.44772 21 4V20C21 20.5523 20.5523 21 20 21H4C3.44772 21 3 20.5523 3 20V4C3 3.44772 3.44772 3 4 3ZM5 5V19H19V5H5Z"></path></svg>
+          </button>
+          <input type="range" id="marker-size-slider" class="text-slider" min="0" max="15" value="5">
+          <button class="text-control-btn" id="marker-visibility-toggle" title="Toggle marker visibility">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12.0003 3C17.3924 3 21.8784 6.87976 22.8189 12C21.8784 17.1202 17.3924 21 12.0003 21C6.60812 21 2.12215 17.1202 1.18164 12C2.12215 6.87976 6.60812 3 12.0003 3ZM12.0003 19C16.2359 19 19.8603 16.052 20.7777 12C19.8603 7.94803 16.2359 5 12.0003 5C7.7646 5 4.14022 7.94803 3.22278 12C4.14022 16.052 7.7646 19 12.0003 19ZM12.0003 16.5C9.51498 16.5 7.50026 14.4853 7.50026 12C7.50026 9.51472 9.51498 7.5 12.0003 7.5C14.4855 7.5 16.5003 9.51472 16.5003 12C16.5003 14.4853 14.4855 16.5 12.0003 16.5ZM12.0003 14.5C13.381 14.5 14.5003 13.3807 14.5003 12C14.5003 10.6193 13.381 9.5 12.0003 9.5C10.6196 9.5 9.50026 10.6193 9.50026 12C9.50026 13.3807 10.6196 14.5 12.0003 14.5Z"></path></svg>
+          </button>
+        </div>
+      `;
+
+      // Add event listeners for marker controls
+      document.getElementById('marker-visibility-toggle').addEventListener('click', toggleMarkerVisibility);
+      
+      document.getElementById('marker-style-circle').addEventListener('click', () => setMarkerStyle('circle'));
+      document.getElementById('marker-style-diamond').addEventListener('click', () => setMarkerStyle('rectRot'));
+      document.getElementById('marker-style-square').addEventListener('click', () => setMarkerStyle('rect'));
+
+      document.getElementById('marker-size-slider').addEventListener('input', (e) => {
+        state.lineMarkerSize = parseInt(e.target.value, 10);
+        renderChart();
+      });
+
+      // Initial state for marker controls
+      const markerControls = ['marker-style-circle', 'marker-style-diamond', 'marker-style-square', 'marker-size-slider'];
+      if (!state.lineMarkerVisible) {
+        markerControls.forEach(id => {
+          document.getElementById(id).disabled = true;
+        });
+      }
+    }
   } else {
     container.innerHTML = `
       <div class="data-tabs" role="tablist" aria-label="Data input method">
@@ -911,7 +1005,7 @@ function initDataControls() {
   const csvTextarea = document.getElementById('csv-textarea');
   if(csvTextarea) csvTextarea.addEventListener('input', debounce(updateDataFromCSV, 500));
 
-  if (state.currentChartType !== 'bar') {
+  if (state.currentChartType !== 'bar' && state.currentChartType !== 'line') {
     document.querySelectorAll('.tab-btn').forEach(btn => btn.addEventListener('click', (e) => switchDataTab(e.currentTarget.dataset.tab)));
     document.getElementById('add-row-btn').addEventListener('click', () => {
       if (state.chartData.labels.length >= validation.maxDataPoints) {
@@ -960,6 +1054,21 @@ function initStyleControls() {
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M2.04932 13H4.06184C4.55393 16.9463 7.92032 20 11.9999 20C16.0796 20 19.4459 16.9463 19.938 13H21.9506C21.4488 18.0533 17.1853 22 11.9999 22C6.81459 22 2.55104 18.0533 2.04932 13ZM2.04932 11C2.55104 5.94668 6.81459 2 11.9999 2C17.1853 2 21.4488 5.94668 21.9506 11H19.938C19.4459 7.05369 16.0796 4 11.9999 4C7.92032 4 4.55393 7.05369 4.06184 11H2.04932ZM11.9999 14C10.8954 14 9.99994 13.1046 9.99994 12C9.99994 10.8954 10.8954 10 11.9999 10C13.1045 10 13.9999 10.8954 13.9999 12C13.9999 13.1046 13.1045 14 11.9999 14Z"></path></svg>
         </button>
         <input type="range" id="smoothing-slider" class="text-slider" min="0" max="20" value="${state.smoothingValue}">
+      </div>
+    `;
+  } else if (state.currentChartType === 'line') {
+    container.innerHTML = `
+      <div class="text-controls">
+        <button class="text-control-btn active" data-type="smoothing" title="Line Smoothing">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M21 19V21H19V19H21ZM17 19V21H15V19H17ZM13 19V21H11V19H13ZM9 19V21H7V19H9ZM5 19V21H3V19H5ZM21 15V17H19V15H21ZM5 15V17H3V15H5ZM5 11V13H3V11H5ZM16 3C18.6874 3 20.8817 5.12366 20.9954 7.78322L21 8V13H19V8C19 6.40893 17.7447 5.09681 16.1756 5.00512L16 5H11V3H16ZM5 7V9H3V7H5ZM5 3V5H3V3H5ZM9 3V5H7V3H9Z"></path></svg>
+        </button>
+        <button class="text-control-btn" data-type="linewidth" title="Line Width">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M15.2427 4.5115L8.50547 11.2487L7.79836 13.37L6.7574 14.411L9.58583 17.2394L10.6268 16.1985L12.7481 15.4914L19.4853 8.75414L15.2427 4.5115ZM21.6066 8.04704C21.9972 8.43756 21.9972 9.07073 21.6066 9.46125L13.8285 17.2394L11.7071 17.9465L10.2929 19.3607C9.90241 19.7513 9.26925 19.7513 8.87872 19.3607L4.63608 15.1181C4.24556 14.7276 4.24556 14.0944 4.63608 13.7039L6.0503 12.2897L6.7574 10.1684L14.5356 2.39018C14.9261 1.99966 15.5593 1.99966 15.9498 2.39018L21.6066 8.04704ZM15.2427 7.33993L16.6569 8.75414L11.7071 13.7039L10.2929 12.2897L15.2427 7.33993ZM4.28253 16.8859L7.11096 19.7143L5.69674 21.1285L1.4541 19.7143L4.28253 16.8859Z"></path></svg>
+        </button>
+        <button class="text-control-btn" data-type="resize" title="Chart Resize">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M21 3C21.5523 3 22 3.44772 22 4V20C22 20.5523 21.5523 21 21 21H3C2.44772 21 2 20.5523 2 20V4C2 3.44772 2.44772 3 3 3H21ZM20 5H4V19H20V5ZM13 17V15H16V12H18V17H13ZM11 7V9H8V12H6V7H11Z"></path></svg>
+        </button>
+        <input type="range" id="smoothing-slider" class="text-slider" min="0" max="5" value="${state.lineTension * 10}">
       </div>
     `;
   } else {
@@ -1183,24 +1292,46 @@ function updateDataFromCSV() {
 function initColorControls() {
   const container = document.getElementById('color-controls');
   container.innerHTML = '';
-  
-  state.chartData.labels.forEach((label, index) => {
-    const control = document.createElement('div');
-    control.className = 'color-control';
-    
-    control.innerHTML = `
-      <span class="color-label">${label}</span>
-      <input type="color" class="color-picker" value="${state.chartData.datasets[0].backgroundColor[index]}" data-index="${index}">
+
+  if (state.currentChartType === 'line') {
+    container.innerHTML = `
+      <div class="color-control">
+        <span class="color-label">Line</span>
+        <input type="color" class="color-picker" id="line-color-picker" value="${state.lineChartLineColor}">
+      </div>
+      <div class="color-control">
+        <span class="color-label">Markers</span>
+        <input type="color" class="color-picker" id="marker-color-picker" value="${state.lineChartMarkerColor}">
+      </div>
     `;
-    
-    container.appendChild(control);
-    
-    // Add event listener
-    const colorPicker = control.querySelector('.color-picker');
-    colorPicker.addEventListener('input', (e) => {
-      updateSegmentColor(index, e.target.value);
+    document.getElementById('line-color-picker').addEventListener('input', (e) => {
+      state.lineChartLineColor = e.target.value;
+      renderChart();
     });
-  });
+    document.getElementById('marker-color-picker').addEventListener('input', (e) => {
+      state.lineChartMarkerColor = e.target.value;
+      renderChart();
+    });
+  } else {
+    // Existing logic for other chart types
+    state.chartData.labels.forEach((label, index) => {
+      const control = document.createElement('div');
+      control.className = 'color-control';
+      
+      control.innerHTML = `
+        <span class="color-label">${label}</span>
+        <input type="color" class="color-picker" value="${state.chartData.datasets[0].backgroundColor[index]}" data-index="${index}">
+      `;
+      
+      container.appendChild(control);
+      
+      // Add event listener
+      const colorPicker = control.querySelector('.color-picker');
+      colorPicker.addEventListener('input', (e) => {
+        updateSegmentColor(index, e.target.value);
+      });
+    });
+  }
 }
 
 function updateSegmentColor(index, color) {
@@ -1285,6 +1416,20 @@ function updateSmoothing() {
     if (state.activeControl === 'gap') state.gapValue = value;
     if (state.activeControl === 'hole') state.donutCutoutPercentage = value;
   }
+
+  if (state.currentChartType === 'line') {
+    switch (state.activeControl) {
+      case 'smoothing':
+        state.lineTension = value / 10; // Scale 0-5 to 0-0.5
+        break;
+      case 'linewidth':
+        state.lineWidth = value;
+        break;
+      case 'resize':
+        state.barAspectRatio = value / 100;
+        break;
+    }
+  }
   
   renderChart();
 }
@@ -1311,6 +1456,23 @@ function updateSmoothingSlider() {
         slider.value = state.barAspectRatio * 100;
         break;
     }
+  } else if (state.currentChartType === 'line') {
+    switch (state.activeControl) {
+      case 'smoothing':
+        slider.min = 0;
+        slider.max = 5; // Represents 0.0 to 0.5 tension
+        slider.value = state.lineTension * 10;
+        break;
+      case 'linewidth':
+        slider.min = 1;
+        slider.max = 15;
+        slider.value = state.lineWidth;
+        break;
+      case 'resize': // Re-uses bar chart aspect ratio logic
+        slider.min = 100;
+        slider.max = 200;
+        slider.value = state.barAspectRatio * 100;
+    }
   } else { // Pie/Donut logic
     switch (state.activeControl) {
       case 'corner':
@@ -1336,10 +1498,10 @@ function updateSmoothingVisibility() {
   const styleControl = document.getElementById('style-control');
   const holeToggle = document.getElementById('donut-hole-toggle');
   
-  const isPieOrDonut = state.currentChartType === 'pie' || state.currentChartType === 'donut';
-  styleControl.style.display = isPieOrDonut || state.currentChartType === 'bar' ? '' : 'none';
+  const isStyleVisible = ['pie', 'donut', 'bar', 'line'].includes(state.currentChartType);
+  styleControl.style.display = isStyleVisible ? '' : 'none';
   
-  if (isPieOrDonut && holeToggle) {
+  if ((state.currentChartType === 'pie' || state.currentChartType === 'donut') && holeToggle) {
     holeToggle.style.display = state.currentChartType === 'donut' ? 'flex' : 'none';
     
     // If hole was active and we switch to pie, reset active control
@@ -1367,6 +1529,41 @@ function setBarOrientation(orientation) {
     horizontalBtn.classList.add('active');
     verticalBtn.classList.remove('active');
   }
+  renderChart();
+}
+
+function setMarkerStyle(style) {
+  state.lineMarkerStyle = style;
+  
+  // Update active button
+  document.querySelectorAll('#marker-style-circle, #marker-style-diamond, #marker-style-square').forEach(btn => {
+    btn.classList.remove('active');
+  });
+
+  let activeBtnId;
+  if (style === 'circle') activeBtnId = 'marker-style-circle';
+  else if (style === 'rectRot') activeBtnId = 'marker-style-diamond';
+  else if (style === 'rect') activeBtnId = 'marker-style-square';
+  
+  if(activeBtnId) document.getElementById(activeBtnId).classList.add('active');
+
+  renderChart();
+}
+
+function toggleMarkerVisibility() {
+  state.lineMarkerVisible = !state.lineMarkerVisible;
+  const toggleBtn = document.getElementById('marker-visibility-toggle');
+  
+  const visibleIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12.0003 3C17.3924 3 21.8784 6.87976 22.8189 12C21.8784 17.1202 17.3924 21 12.0003 21C6.60812 21 2.12215 17.1202 1.18164 12C2.12215 6.87976 6.60812 3 12.0003 3ZM12.0003 19C16.2359 19 19.8603 16.052 20.7777 12C19.8603 7.94803 16.2359 5 12.0003 5C7.7646 5 4.14022 7.94803 3.22278 12C4.14022 16.052 7.7646 19 12.0003 19ZM12.0003 16.5C9.51498 16.5 7.50026 14.4853 7.50026 12C7.50026 9.51472 9.51498 7.5 12.0003 7.5C14.4855 7.5 16.5003 9.51472 16.5003 12C16.5003 14.4853 14.4855 16.5 12.0003 16.5ZM12.0003 14.5C13.381 14.5 14.5003 13.3807 14.5003 12C14.5003 10.6193 13.381 9.5 12.0003 9.5C10.6196 9.5 9.50026 10.6193 9.50026 12C9.50026 13.3807 10.6196 14.5 12.0003 14.5Z"></path></svg>`;
+  const hiddenIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M17.8827 19.2968C16.1814 20.3755 14.1638 21.0002 12.0003 21.0002C6.60812 21.0002 2.12215 17.1204 1.18164 12.0002C1.61832 9.62282 2.81932 7.5129 4.52047 5.93457L1.39366 2.80777L2.80788 1.39355L22.6069 21.1925L21.1927 22.6068L17.8827 19.2968ZM5.9356 7.3497C4.60673 8.56015 3.6378 10.1672 3.22278 12.0002C4.14022 16.0521 7.7646 19.0002 12.0003 19.0002C13.5997 19.0002 15.112 18.5798 16.4243 17.8384L14.396 15.8101C13.7023 16.2472 12.8808 16.5002 12.0003 16.5002C9.51498 16.5002 7.50026 14.4854 7.50026 12.0002C7.50026 11.1196 7.75317 10.2981 8.19031 9.60442L5.9356 7.3497ZM12.9139 14.328L9.67246 11.0866C9.5613 11.3696 9.50026 11.6777 9.50026 12.0002C9.50026 13.3809 10.6196 14.5002 12.0003 14.5002C12.3227 14.5002 12.6309 14.4391 12.9139 14.328ZM20.8068 16.5925L19.376 15.1617C20.0319 14.2268 20.5154 13.1586 20.7777 12.0002C19.8603 7.94818 16.2359 5.00016 12.0003 5.00016C11.1544 5.00016 10.3329 5.11773 9.55249 5.33818L7.97446 3.76015C9.22127 3.26959 10.5793 3.00016 12.0003 3.00016C17.3924 3.00016 21.8784 6.87992 22.8189 12.0002C22.5067 13.6998 21.8038 15.2628 20.8068 16.5925ZM11.7229 7.50857C11.8146 7.50299 11.9071 7.50016 12.0003 7.50016C14.4855 7.50016 16.5003 9.51488 16.5003 12.0002C16.5003 12.0933 16.4974 12.1858 16.4919 12.2775L11.7229 7.50857Z"></path></svg>`;
+  toggleBtn.innerHTML = state.lineMarkerVisible ? visibleIcon : hiddenIcon;
+
+  // Disable/enable other marker controls
+  const markerControls = ['marker-style-circle', 'marker-style-diamond', 'marker-style-square', 'marker-size-slider'];
+  markerControls.forEach(id => {
+    document.getElementById(id).disabled = !state.lineMarkerVisible;
+  });
+
   renderChart();
 }
 
@@ -1505,7 +1702,7 @@ function initLegendAxisControls() {
   const container = document.getElementById('legend-content');
   if (!container || !summary) return;
 
-  if (state.currentChartType === 'bar') {
+  if (state.currentChartType === 'bar' || state.currentChartType === 'line') {
     summary.textContent = 'Axis';
     container.innerHTML = `
       <div class="text-controls">
