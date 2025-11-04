@@ -410,6 +410,7 @@ function startApp() {
     initManualInput();
     initStyleControls();
     initColorControls();
+    initLegendAxisControls();
     updateSmoothingVisibility();
     renderChart();
     setupDropdownBehavior();
@@ -723,6 +724,7 @@ function selectChartType(type) {
   initManualInput();
   initStyleControls();
   initColorControls();
+  initLegendAxisControls();
   renderChart();
   updateSmoothingVisibility();
 }
@@ -1492,6 +1494,81 @@ function updateLegendVisibilityIcon() {
   const visibleIcon = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12.0003 3C17.3924 3 21.8784 6.87976 22.8189 12C21.8784 17.1202 17.3924 21 12.0003 21C6.60812 21 2.12215 17.1202 1.18164 12C2.12215 6.87976 6.60812 3 12.0003 3ZM12.0003 19C16.2359 19 19.8603 16.052 20.7777 12C19.8603 7.94803 16.2359 5 12.0003 5C7.7646 5 4.14022 7.94803 3.22278 12C4.14022 16.052 7.7646 19 12.0003 19ZM12.0003 16.5C9.51498 16.5 7.50026 14.4853 7.50026 12C7.50026 9.51472 9.51498 7.5 12.0003 7.5C14.4855 7.5 16.5003 9.51472 16.5003 12C16.5003 14.4853 14.4855 16.5 12.0003 16.5ZM12.0003 14.5C13.381 14.5 14.5003 13.3807 14.5003 12C14.5003 10.6193 13.381 9.5 12.0003 9.5C10.6196 9.5 9.50026 10.6193 9.50026 12C9.50026 13.3807 10.6196 14.5 12.0003 14.5Z"></path></svg>';
   const hiddenIcon = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M9.34268 18.7819L7.41083 18.2642L8.1983 15.3254C7.00919 14.8874 5.91661 14.2498 4.96116 13.4534L2.80783 15.6067L1.39362 14.1925L3.54695 12.0392C2.35581 10.6103 1.52014 8.87466 1.17578 6.96818L3.14386 6.61035C3.90289 10.8126 7.57931 14.0001 12.0002 14.0001C16.4211 14.0001 20.0976 10.8126 20.8566 6.61035L22.8247 6.96818C22.4803 8.87466 21.6446 10.6103 20.4535 12.0392L22.6068 14.1925L21.1926 15.6067L19.0393 13.4534C18.0838 14.2498 16.9912 14.8874 15.8021 15.3254L16.5896 18.2642L14.6578 18.7819L13.87 15.8418C13.2623 15.9459 12.6376 16.0001 12.0002 16.0001C11.3629 16.0001 10.7381 15.9459 10.1305 15.8418L9.34268 18.7819Z"></path></svg>';
   btn.innerHTML = state.legendVisible ? visibleIcon : hiddenIcon;
+}
+
+// ============================================
+// AXIS CONTROLS (for Bar Chart)
+// ============================================
+function initLegendAxisControls() {
+  const details = document.querySelector('summary[aria-controls="legend-content"]').parentElement;
+  const summary = details.querySelector('summary');
+  const container = document.getElementById('legend-content');
+  if (!container || !summary) return;
+
+  if (state.currentChartType === 'bar') {
+    summary.textContent = 'Axis';
+    container.innerHTML = `
+      <div class="text-controls">
+        <button class="text-control-btn ${state.axisVisible ? 'active' : ''}" id="axis-visible-toggle" title="Show/hide axis">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12.0003 3C17.3924 3 21.8784 6.87976 22.8189 12C21.8784 17.1202 17.3924 21 12.0003 21C6.60812 21 2.12215 17.1202 1.18164 12C2.12215 6.87976 6.60812 3 12.0003 3ZM12.0003 19C16.2359 19 19.8603 16.052 20.7777 12C19.8603 7.94803 16.2359 5 12.0003 5C7.7646 5 4.14022 7.94803 3.22278 12C4.14022 16.052 7.7646 19 12.0003 19ZM12.0003 16.5C9.51498 16.5 7.50026 14.4853 7.50026 12C7.50026 9.51472 9.51498 7.5 12.0003 7.5C14.4855 7.5 16.5003 9.51472 16.5003 12C16.5003 14.4853 14.4855 16.5 12.0003 16.5ZM12.0003 14.5C13.381 14.5 14.5003 13.3807 14.5003 12C14.5003 10.6193 13.381 9.5 12.0003 9.5C10.6196 9.5 9.50026 10.6193 9.50026 12C9.50026 13.3807 10.6196 14.5 12.0003 14.5Z"></path></svg>
+        </button>
+        <span class="legend-size-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M11.246 15H4.75416L2.75416 20H0.600098L7.0001 4H9.0001L15.4001 20H13.246L11.246 15ZM10.446 13L8.0001 6.88516L5.55416 13H10.446ZM21.0001 12.5351V12H23.0001V20H21.0001V19.4649C20.4118 19.8052 19.7287 20 19.0001 20C16.791 20 15.0001 18.2091 15.0001 16C15.0001 13.7909 16.791 12 19.0001 12C19.7287 12 20.4118 12.1948 21.0001 12.5351ZM19.0001 18C20.1047 18 21.0001 17.1046 21.0001 16C21.0001 14.8954 20.1047 14 19.0001 14C17.8955 14 17.0001 14.8954 17.0001 16C17.0001 17.1046 17.8955 18 19.0001 18Z"></path></svg>
+        </span>
+        <input type="range" id="axis-size-slider" class="text-slider" min="8" max="18" value="${state.axisSize}">
+        <button class="text-control-btn ${state.axisBold ? 'active' : ''}" id="axis-bold-btn" title="Bold axis text">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M8 11H12.5C13.8807 11 15 9.88071 15 8.5C15 7.11929 13.8807 6 12.5 6H8V11ZM18 15.5C18 17.9853 15.9853 20 13.5 20H6V4H12.5C14.9853 4 17 6.01472 17 8.5C17 9.70431 16.5269 10.7981 15.7564 11.6058C17.0979 12.3847 18 13.837 18 15.5ZM8 13V18H13.5C14.8807 18 16 16.8807 16 15.5C16 14.1193 14.8807 13 13.5 13H8Z"></path></svg>
+        </button>
+        <input type="color" id="axis-color-picker" class="color-picker" value="${state.axisColor}">
+      </div>
+    `;
+    // Attach listeners for new controls
+    document.getElementById('axis-visible-toggle').addEventListener('click', (e) => {
+      state.axisVisible = !state.axisVisible;
+      e.currentTarget.classList.toggle('active');
+      renderChart();
+    });
+    document.getElementById('axis-size-slider').addEventListener('input', debounce((e) => {
+      state.axisSize = parseInt(e.target.value);
+      renderChart();
+    }, 100));
+    document.getElementById('axis-bold-btn').addEventListener('click', (e) => {
+      state.axisBold = !state.axisBold;
+      e.currentTarget.classList.toggle('active');
+      renderChart();
+    });
+    document.getElementById('axis-color-picker').addEventListener('input', (e) => {
+      state.axisColor = e.target.value;
+      renderChart();
+    });
+
+  } else {
+    summary.textContent = 'Legend';
+    container.innerHTML = `
+      <div class="legend-control-row">
+        <button class="text-control-btn" id="legend-visible-toggle" title="Show/hide legend">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12.0003 3C17.3924 3 21.8784 6.87976 22.8189 12C21.8784 17.1202 17.3924 21 12.0003 21C6.60812 21 2.12215 17.1202 1.18164 12C2.12215 6.87976 6.60812 3 12.0003 3ZM12.0003 19C16.2359 19 19.8603 16.052 20.7777 12C19.8603 7.94803 16.2359 5 12.0003 5C7.7646 5 4.14022 7.94803 3.22278 12C4.14022 16.052 7.7646 19 12.0003 19ZM12.0003 16.5C9.51498 16.5 7.50026 14.4853 7.50026 12C7.50026 9.51472 9.51498 7.5 12.0003 7.5C14.4855 7.5 16.5003 9.51472 16.5003 12C16.5003 14.4853 14.4855 16.5 12.0003 16.5ZM12.0003 14.5C13.381 14.5 14.5003 13.3807 14.5003 12C14.5003 10.6193 13.381 9.5 12.0003 9.5C10.6196 9.5 9.50026 10.6193 9.50026 12C9.50026 13.3807 10.6196 14.5 12.0003 14.5Z"></path></svg>
+        </button>
+        <button class="text-control-btn ${state.legendPosition === 'bottom' ? 'active' : ''}" id="legend-position-down" title="Legend below chart">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M13.0001 16.1716L18.3641 10.8076L19.7783 12.2218L12.0001 20L4.22192 12.2218L5.63614 10.8076L11.0001 16.1716V4H13.0001V16.1716Z"></path></svg>
+        </button>
+        <button class="text-control-btn ${state.legendPosition === 'top' ? 'active' : ''}" id="legend-position-up" title="Legend above chart">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M13.0001 7.82843V20H11.0001V7.82843L5.63614 13.1924L4.22192 11.7782L12.0001 4L19.7783 11.7782L18.3641 13.1924L13.0001 7.82843Z"></path></svg>
+        </button>
+        <span class="legend-size-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M11.246 15H4.75416L2.75416 20H0.600098L7.0001 4H9.0001L15.4001 20H13.246L11.246 15ZM10.446 13L8.0001 6.88516L5.55416 13H10.446ZM21.0001 12.5351V12H23.0001V20H21.0001V19.4649C20.4118 19.8052 19.7287 20 19.0001 20C16.791 20 15.0001 18.2091 15.0001 16C15.0001 13.7909 16.791 12 19.0001 12C19.7287 12 20.4118 12.1948 21.0001 12.5351ZM19.0001 18C20.1047 18 21.0001 17.1046 21.0001 16C21.0001 14.8954 20.1047 14 19.0001 14C17.8955 14 17.0001 14.8954 17.0001 16C17.0001 17.1046 17.8955 18 19.0001 18Z"></path></svg>
+        </span>
+        <input type="range" id="legend-size-slider" class="text-slider" min="10" max="18" value="${state.legendSize}">
+        <input type="color" id="legend-color" class="color-picker" value="${state.legendColor}">
+      </div>
+    `;
+    // Re-attach listeners for original controls
+    document.getElementById('legend-visible-toggle').addEventListener('click', () => { state.legendVisible = !state.legendVisible; updateLegendVisibilityIcon(); renderChart(); });
+    document.getElementById('legend-position-down').addEventListener('click', () => { state.legendPosition = 'bottom'; document.getElementById('legend-position-down').classList.add('active'); document.getElementById('legend-position-up').classList.remove('active'); renderChart(); });
+    document.getElementById('legend-position-up').addEventListener('click', () => { state.legendPosition = 'top'; document.getElementById('legend-position-up').classList.add('active'); document.getElementById('legend-position-down').classList.remove('active'); renderChart(); });
+    document.getElementById('legend-size-slider').addEventListener('input', debounce(() => { state.legendSize = parseInt(document.getElementById('legend-size-slider').value); updateLegendStyle(); }, 100));
+    document.getElementById('legend-color').addEventListener('input', () => { state.legendColor = document.getElementById('legend-color').value; updateLegendStyle(); });
+  }
 }
 
 
