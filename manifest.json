@@ -1,0 +1,29 @@
+{
+  "name": "ChartFlam",
+  "short_name": "ChartFlam",
+  "description": "Free mobile-first web app for content creators to create simple charts for social media.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#e6e2ff",
+  "theme_color": "#6A5ACD",
+  "icons": [
+    {
+      "src": "public/chartflam-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "public/chartflam-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "public/chartflam-icon-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
