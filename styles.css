@@ -83,7 +83,7 @@ body {
 }
 
 .splash img {
-    width: 150px;
+    width: 225px;
     height: auto;
     margin-bottom: var(--spacing-xl);
     filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
@@ -106,8 +106,8 @@ body {
     background-color: var(--enter-btn);
     color: var(--text-dark);
     border: none;
-    padding: 1rem 2.5rem;
-    font-size: 1.1rem;
+    padding: 0.5rem 1.25rem;
+    font-size: 0.95rem;
     font-weight: 600;
     border-radius: var(--radius-md);
     cursor: pointer;
@@ -962,7 +962,7 @@ input[type="range"]::-moz-range-thumb:hover {
     }
 
     .splash img {
-        width: 120px;
+        width: 200px;
     }
 
     .chart-icon {

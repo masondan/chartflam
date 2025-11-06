@@ -197,7 +197,6 @@ function showSplash() {
     app.innerHTML = `
     <div class="splash">
       <img src="public/chartflam-logo.png" alt="ChartFlam Logo">
-      <h1>ChartFlam</h1>
       <p>Create simple charts for social media</p>
       <button class="btn-enter" id="splash-btn">Get Started</button>
     </div>
