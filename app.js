@@ -165,7 +165,6 @@ function validateText(text, maxLength, fieldName = 'Text') {
 }
 
 
-
 // Set processing state
 function setProcessing(isProcessing) {
     state.isProcessing = isProcessing;
