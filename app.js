@@ -1921,47 +1921,206 @@ function setupDropdownBehavior() {
 // ============================================
 // DOWNLOAD
 // ============================================
-function downloadChart() {
-  if (!state.chart) {
-    alert('No chart to download');
-    return;
-  }
 
-  // Create a temporary canvas with fixed size
-  const tempCanvas = document.createElement('canvas');
-  const tempCtx = tempCanvas.getContext('2d');
-  tempCanvas.width = 1080;
-  tempCanvas.height = 1080;
+// Download pictogram at high resolution (1080px wide)
+async function downloadPictogramHighRes() {
+  const exportWidth = 1080;
+  const iconsPerRow = 5;
+  const totalIcons = 10;
+  const rows = 2;
+  
+  // Convert spacing slider values (0-100) to pixel values (-50 to +50)
+  const horizontalSpacing = state.pictogramHorizontalSpacing - 50;
+  const verticalSpacing = state.pictogramVerticalSpacing - 50;
+  
+  // Calculate icon sizing at export resolution
+  const padding = 40;
+  const availableWidth = exportWidth - (padding * 2);
+  const iconWidth = (availableWidth - (horizontalSpacing * (iconsPerRow - 1))) / iconsPerRow;
+  const iconHeight = iconWidth;
+  
+  // Calculate canvas height
+  const canvasHeight = (rows * iconHeight) + ((rows - 1) * verticalSpacing) + (padding * 2);
+  
+  // Calculate total export height
+  let totalHeight = 120; // Top padding
+  if (state.chartTitle) totalHeight += 80;
+  totalHeight += canvasHeight;
+  if (state.chartCaption) totalHeight += 80;
+  totalHeight += 60; // Bottom padding
+  
+  // Create export canvas
+  const exportCanvas = document.createElement('canvas');
+  const ctx = exportCanvas.getContext('2d');
+  exportCanvas.width = exportWidth;
+  exportCanvas.height = totalHeight;
   
   // Fill background
-  tempCtx.fillStyle = state.chartBackgroundColor;
-  tempCtx.fillRect(0, 0, 1080, 1080);
+  ctx.fillStyle = state.chartBackgroundColor === 'transparent' ? '#FFFFFF' : state.chartBackgroundColor;
+  ctx.fillRect(0, 0, exportWidth, totalHeight);
   
-  // Calculate positions
+  // Track vertical position
   let yOffset = 60;
   
   // Draw title if present
   if (state.chartTitle) {
-    tempCtx.fillStyle = '#333333';
-    tempCtx.font = 'bold 48px Inter, sans-serif';
-    tempCtx.textAlign = 'center';
-    tempCtx.fillText(state.chartTitle, 540, yOffset);
+    ctx.fillStyle = state.titleColor;
+    ctx.font = `${state.titleBold ? 'bold' : 'normal'} ${state.titleItalic ? 'italic' : 'normal'} 48px ${state.titleFont}, sans-serif`;
+    ctx.textAlign = state.titleAlign;
+    const titleX = state.titleAlign === 'left' ? 40 : (state.titleAlign === 'right' ? exportWidth - 40 : exportWidth / 2);
+    ctx.fillText(state.chartTitle, titleX, yOffset);
     yOffset += 80;
   }
+  
+  // Build icon positions
+  const positions = [];
+  for (let i = 0; i < totalIcons; i++) {
+    const row = Math.floor(i / iconsPerRow);
+    const col = i % iconsPerRow;
+    
+    positions.push({
+      x: padding + (col * (iconWidth + horizontalSpacing)),
+      y: yOffset + padding + (row * (iconHeight + verticalSpacing)),
+      width: iconWidth,
+      height: iconHeight
+    });
+  }
+  
+  // Calculate full vs partial icons
+  const filled = state.pictogramFilled;
+  const fullIcons = Math.floor(filled);
+  const partialAmount = filled % 1;
+  
+  // Render each icon at high resolution
+  for (let i = 0; i < positions.length; i++) {
+    const pos = positions[i];
+    let color;
+    
+    if (i < fullIcons) {
+      // Full filled icon
+      color = state.pictogramFilledColor;
+      await renderSvgToCanvas(ctx, state.pictogramIconSvg, pos.x, pos.y, pos.width, pos.height, color);
+    } else if (i === fullIcons && partialAmount > 0) {
+      // Partial filled icon - use clipping
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(pos.x, pos.y, pos.width * partialAmount, pos.height);
+      ctx.clip();
+      color = state.pictogramFilledColor;
+      await renderSvgToCanvas(ctx, state.pictogramIconSvg, pos.x, pos.y, pos.width, pos.height, color);
+      ctx.restore();
+      
+      // Draw the unfilled portion
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(pos.x + (pos.width * partialAmount), pos.y, pos.width * (1 - partialAmount), pos.height);
+      ctx.clip();
+      color = state.pictogramUnfilledColor;
+      await renderSvgToCanvas(ctx, state.pictogramIconSvg, pos.x, pos.y, pos.width, pos.height, color);
+      ctx.restore();
+    } else {
+      // Unfilled icon
+      color = state.pictogramUnfilledColor;
+      await renderSvgToCanvas(ctx, state.pictogramIconSvg, pos.x, pos.y, pos.width, pos.height, color);
+    }
+  }
+  
+  // Draw caption if present
+  if (state.chartCaption) {
+    yOffset += canvasHeight + 40;
+    ctx.fillStyle = state.captionColor;
+    ctx.font = `${state.captionBold ? 'bold' : 'normal'} ${state.captionItalic ? 'italic' : 'normal'} 28px ${state.captionFont}, sans-serif`;
+    ctx.textAlign = state.captionAlign;
+    const captionX = state.captionAlign === 'left' ? 40 : (state.captionAlign === 'right' ? exportWidth - 40 : exportWidth / 2);
+    ctx.fillText(state.chartCaption, captionX, yOffset);
+  }
+  
+  // Download
+  const link = document.createElement('a');
+  const timestamp = new Date().toISOString().slice(0, 10);
+  link.download = `chartflam-pictogram-${timestamp}.png`;
+  link.href = exportCanvas.toDataURL('image/png');
+  link.click();
+}
+
+function downloadChart() {
+  const canvas = document.getElementById('chart-canvas');
+  
+  // For pictogram, use canvas directly; for others, check state.chart
+  if (state.currentChartType !== 'pictogram' && !state.chart) {
+    alert('No chart to download');
+    return;
+  }
+  
+  if (!canvas) {
+    alert('Canvas not found');
+    return;
+  }
+
+  // For pictograms, render at high resolution
+  if (state.currentChartType === 'pictogram') {
+    downloadPictogramHighRes();
+    return;
+  }
+  
+  // For Chart.js charts, get actual canvas dimensions to preserve aspect ratio
+  const canvasWidth = canvas.width;
+  const canvasHeight = canvas.height;
+  const canvasAspectRatio = canvasHeight / canvasWidth;
+  
+  // Calculate export dimensions (1080px wide, height based on aspect ratio)
+  const exportWidth = 1080;
+  const chartWidth = 1000; // Chart area width
+  const chartHeight = chartWidth * canvasAspectRatio;
+  
+  // Calculate total canvas height needed
+  let totalHeight = 120; // Top padding
+  if (state.chartTitle) totalHeight += 80;
+  totalHeight += chartHeight;
+  if (state.chartCaption) totalHeight += 80;
+  totalHeight += 60; // Bottom padding
+  
+  // Create export canvas
+  const tempCanvas = document.createElement('canvas');
+  const tempCtx = tempCanvas.getContext('2d');
+  tempCanvas.width = exportWidth;
+  tempCanvas.height = totalHeight;
+  
+  // Fill background
+  tempCtx.fillStyle = state.chartBackgroundColor === 'transparent' ? '#FFFFFF' : state.chartBackgroundColor;
+  tempCtx.fillRect(0, 0, exportWidth, totalHeight);
+  
+  // Track vertical position
+  let yOffset = 60;
+  
+  // Draw title if present
+  if (state.chartTitle) {
+    tempCtx.fillStyle = state.titleColor;
+    tempCtx.font = `${state.titleBold ? 'bold' : 'normal'} ${state.titleItalic ? 'italic' : 'normal'} 48px ${state.titleFont}, sans-serif`;
+    tempCtx.textAlign = state.titleAlign;
+    const titleX = state.titleAlign === 'left' ? 40 : (state.titleAlign === 'right' ? exportWidth - 40 : exportWidth / 2);
+    tempCtx.fillText(state.chartTitle, titleX, yOffset);
+    yOffset += 80;
+  }
+  
+  // Get chart image source
+  const chartImageSrc = state.chart.toBase64Image();
   
   // Draw chart
   const chartImage = new Image();
   chartImage.onload = function() {
-    const chartSize = 900;
-    const chartX = (1080 - chartSize) / 2;
-    tempCtx.drawImage(chartImage, chartX, yOffset, chartSize, chartSize);
+    const chartX = (exportWidth - chartWidth) / 2;
+    tempCtx.drawImage(chartImage, chartX, yOffset, chartWidth, chartHeight);
+    
+    yOffset += chartHeight + 40;
     
     // Draw caption if present
     if (state.chartCaption) {
-      tempCtx.fillStyle = '#555555';
-      tempCtx.font = '28px Inter, sans-serif';
-      tempCtx.textAlign = 'center';
-      tempCtx.fillText(state.chartCaption, 540, 1020);
+      tempCtx.fillStyle = state.captionColor;
+      tempCtx.font = `${state.captionBold ? 'bold' : 'normal'} ${state.captionItalic ? 'italic' : 'normal'} 28px ${state.captionFont}, sans-serif`;
+      tempCtx.textAlign = state.captionAlign;
+      const captionX = state.captionAlign === 'left' ? 40 : (state.captionAlign === 'right' ? exportWidth - 40 : exportWidth / 2);
+      tempCtx.fillText(state.chartCaption, captionX, yOffset);
     }
     
     // Download
@@ -1972,7 +2131,7 @@ function downloadChart() {
     link.click();
   };
   
-  chartImage.src = state.chart.toBase64Image();
+  chartImage.src = chartImageSrc;
 }
 
 // ============================================
