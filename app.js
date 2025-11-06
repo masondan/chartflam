@@ -2230,12 +2230,12 @@ function initPictogramControls() {
   renderIconPreview();
   
   // Event listeners
-  document.getElementById('pictogram-filled-slider').addEventListener('input', (e) => {
+  document.getElementById('pictogram-filled-slider').addEventListener('input', debounce((e) => {
     const value = parseFloat(e.target.value);
     state.pictogramFilled = value;
     document.getElementById('pictogram-filled-input').value = value;
     renderPictogramChart();
-  });
+  }, 200));
   
   document.getElementById('pictogram-filled-input').addEventListener('input', debounce((e) => {
     let value = parseFloat(e.target.value);
