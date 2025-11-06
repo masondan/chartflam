@@ -60,13 +60,15 @@ const state = {
   lineTension: 0,
   lineWidth: 3,
   // Pictogram properties
-  pictogramTotal: 10,
+  pictogramTotal: 10, // Fixed at 10 icons (2 rows x 5 icons)
   pictogramFilled: 6.7,
-  pictogramIconsPerRow: 5,
   pictogramCurrentIcon: 'gas',
   pictogramIconSvg: '',
   pictogramFilledColor: '#8628DC',
   pictogramUnfilledColor: '#e2c4ff',
+  pictogramHorizontalSpacing: 50, // Slider 0-100: 0=-50px(overlap), 50=0px(none,centered), 100=+50px(loose)
+  pictogramVerticalSpacing: 50, // Slider 0-100: 0=-50px(overlap), 50=0px(none,centered), 100=+50px(loose)
+  pictogramActiveSpacingControl: 'horizontal', // 'horizontal' or 'vertical'
   pictogramIconCategories: [],
   pictogramAllIcons: [],
   chart: null,
@@ -2082,23 +2084,25 @@ function renderSvgToCanvas(ctx, svgString, x, y, width, height, color) {
 function calculatePictogramLayout() {
   const canvas = document.getElementById('chart-canvas');
   const canvasWidth = canvas.width;
-  const iconsPerRow = state.pictogramIconsPerRow;
-  const totalIcons = state.pictogramTotal;
+  const iconsPerRow = 5; // Fixed at 5 icons per row
+  const totalIcons = 10; // Fixed at 10 icons total (2 rows)
+  const rows = 2; // Always 2 rows
   
-  // Calculate rows needed
-  const rows = Math.ceil(totalIcons / iconsPerRow);
+  // Convert spacing slider values (0-100) to pixel values (-50 to +50)
+  // Slider at 50 = 0px spacing (centered), Slider at 0 = -50px (overlap), Slider at 100 = +50px (loose)
+  const horizontalSpacing = state.pictogramHorizontalSpacing - 50;
+  const verticalSpacing = state.pictogramVerticalSpacing - 50;
   
   // Icon sizing with padding
   const padding = 20;
   const availableWidth = canvasWidth - (padding * 2);
-  const iconSpacing = 3; // Reduced spacing between icons (adjust this value to change spacing)
-  const iconWidth = (availableWidth - (iconSpacing * (iconsPerRow - 1))) / iconsPerRow;
+  const iconWidth = (availableWidth - (horizontalSpacing * (iconsPerRow - 1))) / iconsPerRow;
   const iconHeight = iconWidth; // Keep square
   
   // Calculate canvas height needed
-  const canvasHeight = (rows * iconHeight) + ((rows - 1) * iconSpacing) + (padding * 2);
+  const canvasHeight = (rows * iconHeight) + ((rows - 1) * verticalSpacing) + (padding * 2);
   
-  console.log('Layout calc: iconWidth=', iconWidth, 'iconSpacing=', iconSpacing, 'rows=', rows, 'canvasHeight=', canvasHeight);
+  console.log('Layout: iconWidth=', iconWidth.toFixed(1), 'hSpacing=', horizontalSpacing.toFixed(1), 'vSpacing=', verticalSpacing.toFixed(1), 'height=', canvasHeight.toFixed(1));
   
   // Build positions array
   const positions = [];
@@ -2107,8 +2111,8 @@ function calculatePictogramLayout() {
     const col = i % iconsPerRow;
     
     positions.push({
-      x: padding + (col * (iconWidth + iconSpacing)),
-      y: padding + (row * (iconHeight + iconSpacing)),
+      x: padding + (col * (iconWidth + horizontalSpacing)),
+      y: padding + (row * (iconHeight + verticalSpacing)),
       width: iconWidth,
       height: iconHeight
     });
@@ -2203,21 +2207,22 @@ function initPictogramControls() {
   
   dataContent.innerHTML = `
     <div class="pictogram-data-row" style="display: flex; align-items: center; gap: var(--spacing-sm); margin-bottom: var(--spacing-md);">
-      <span style="font-weight: 600; min-width: 50px;">Total</span>
-      <input type="range" id="pictogram-total-slider" min="10" max="100" step="10" value="${state.pictogramTotal}" style="flex: 1;">
-      <input type="number" id="pictogram-total-input" min="10" max="100" value="${state.pictogramTotal}" class="pictogram-input-box">
-      <div id="pictogram-icon-display" class="pictogram-input-box" style="display: flex; align-items: center; justify-content: center; cursor: pointer; background: white;">
-        <div id="pictogram-icon-preview" style="width: 30px; height: 30px;"></div>
-      </div>
+      <span style="font-weight: 600; min-width: 80px;">Filled icons</span>
+      <input type="range" id="pictogram-filled-slider" min="0" max="10" step="0.1" value="${state.pictogramFilled}" style="flex: 1;">
+      <input type="number" id="pictogram-filled-input" min="0" max="10" step="0.1" value="${state.pictogramFilled}" class="pictogram-input-box">
     </div>
     
     <div class="pictogram-data-row" style="display: flex; align-items: center; gap: var(--spacing-sm);">
-      <span style="font-weight: 600; min-width: 50px;">Filled</span>
-      <input type="number" id="pictogram-filled-input" min="0" max="${state.pictogramTotal}" step="0.1" value="${state.pictogramFilled}" class="pictogram-input-box">
-      <div style="flex: 1;"></div>
-      <span style="font-weight: 600;">Icons per row</span>
-      <button class="text-control-btn pictogram-input-box ${state.pictogramIconsPerRow === 5 ? 'active' : ''}" id="pictogram-per-row-5" data-value="5">5</button>
-      <button class="text-control-btn pictogram-input-box ${state.pictogramIconsPerRow === 10 ? 'active' : ''}" id="pictogram-per-row-10" data-value="10">10</button>
+      <button class="smooth-toggle ${state.pictogramActiveSpacingControl === 'horizontal' ? 'active' : ''}" id="spacing-horizontal-toggle" title="Horizontal spacing">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M0.5 12L5.44975 7.05029L6.86396 8.46451L4.32843 11H10V13H4.32843L6.86148 15.5331L5.44727 16.9473L0.5 12ZM14 13H19.6708L17.1358 15.535L18.55 16.9493L23.5 11.9996L18.5503 7.0498L17.136 8.46402L19.6721 11H14V13Z"></path></svg>
+      </button>
+      <button class="smooth-toggle ${state.pictogramActiveSpacingControl === 'vertical' ? 'active' : ''}" id="spacing-vertical-toggle" title="Vertical spacing">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M11.9995 0.499512L16.9492 5.44926L15.535 6.86347L12.9995 4.32794V9.99951H10.9995L10.9995 4.32794L8.46643 6.86099L7.05222 5.44678L11.9995 0.499512ZM10.9995 13.9995L10.9995 19.6704L8.46448 17.1353L7.05026 18.5496L12 23.4995L16.9497 18.5498L15.5355 17.1356L12.9995 19.6716V13.9995H10.9995Z"></path></svg>
+      </button>
+      <input type="range" id="pictogram-spacing-slider" min="0" max="100" value="${state.pictogramActiveSpacingControl === 'horizontal' ? state.pictogramHorizontalSpacing : state.pictogramVerticalSpacing}" style="flex: 1;">
+      <div id="pictogram-icon-display" class="pictogram-input-box" style="display: flex; align-items: center; justify-content: center; cursor: pointer; background: white;">
+        <div id="pictogram-icon-preview" style="width: 30px; height: 30px;"></div>
+      </div>
     </div>
   `;
   
@@ -2225,45 +2230,45 @@ function initPictogramControls() {
   renderIconPreview();
   
   // Event listeners
-  document.getElementById('pictogram-total-slider').addEventListener('input', (e) => {
-    const value = parseInt(e.target.value);
-    state.pictogramTotal = value;
-    document.getElementById('pictogram-total-input').value = value;
-    document.getElementById('pictogram-filled-input').max = value;
+  document.getElementById('pictogram-filled-slider').addEventListener('input', (e) => {
+    const value = parseFloat(e.target.value);
+    state.pictogramFilled = value;
+    document.getElementById('pictogram-filled-input').value = value;
     renderPictogramChart();
   });
-  
-  document.getElementById('pictogram-total-input').addEventListener('input', debounce((e) => {
-    let value = parseInt(e.target.value);
-    if (value < 10) value = 10;
-    if (value > 100) value = 100;
-    state.pictogramTotal = value;
-    document.getElementById('pictogram-total-slider').value = value;
-    document.getElementById('pictogram-filled-input').max = value;
-    renderPictogramChart();
-  }, 300));
   
   document.getElementById('pictogram-filled-input').addEventListener('input', debounce((e) => {
     let value = parseFloat(e.target.value);
     if (value < 0) value = 0;
-    if (value > state.pictogramTotal) value = state.pictogramTotal;
+    if (value > 10) value = 10;
     state.pictogramFilled = value;
+    document.getElementById('pictogram-filled-slider').value = value;
     renderPictogramChart();
   }, 300));
   
-  document.getElementById('pictogram-per-row-5').addEventListener('click', () => {
-    state.pictogramIconsPerRow = 5;
-    document.getElementById('pictogram-per-row-5').classList.add('active');
-    document.getElementById('pictogram-per-row-10').classList.remove('active');
-    renderPictogramChart();
+  document.getElementById('spacing-horizontal-toggle').addEventListener('click', () => {
+    state.pictogramActiveSpacingControl = 'horizontal';
+    document.getElementById('spacing-horizontal-toggle').classList.add('active');
+    document.getElementById('spacing-vertical-toggle').classList.remove('active');
+    document.getElementById('pictogram-spacing-slider').value = state.pictogramHorizontalSpacing;
   });
   
-  document.getElementById('pictogram-per-row-10').addEventListener('click', () => {
-    state.pictogramIconsPerRow = 10;
-    document.getElementById('pictogram-per-row-10').classList.add('active');
-    document.getElementById('pictogram-per-row-5').classList.remove('active');
-    renderPictogramChart();
+  document.getElementById('spacing-vertical-toggle').addEventListener('click', () => {
+    state.pictogramActiveSpacingControl = 'vertical';
+    document.getElementById('spacing-vertical-toggle').classList.add('active');
+    document.getElementById('spacing-horizontal-toggle').classList.remove('active');
+    document.getElementById('pictogram-spacing-slider').value = state.pictogramVerticalSpacing;
   });
+  
+  document.getElementById('pictogram-spacing-slider').addEventListener('input', debounce((e) => {
+    const value = parseInt(e.target.value);
+    if (state.pictogramActiveSpacingControl === 'horizontal') {
+      state.pictogramHorizontalSpacing = value;
+    } else {
+      state.pictogramVerticalSpacing = value;
+    }
+    renderPictogramChart();
+  }, 300));
   
   document.getElementById('pictogram-icon-display').addEventListener('click', openIconSearchDrawer);
 }
@@ -2307,13 +2312,12 @@ function initPictogramColorsControls() {
   
   coloursContent.innerHTML = `
     <div style="margin-bottom: var(--spacing-md); padding-bottom: var(--spacing-md); border-bottom: 1px solid #e0e0e0;">
-      <div class="color-control">
-        <span class="color-label">Filled</span>
-        <input type="color" class="color-picker" id="pictogram-filled-color-picker" value="${state.pictogramFilledColor}">
-      </div>
-      <div class="color-control">
-        <span class="color-label">Unfilled</span>
-        <input type="color" class="color-picker" id="pictogram-unfilled-color-picker" value="${state.pictogramUnfilledColor}">
+      <div style="display: flex; align-items: center; justify-content: space-between;">
+        <span class="color-label">Icons</span>
+        <div style="display: flex; gap: var(--spacing-sm);">
+          <input type="color" class="color-picker" id="pictogram-filled-color-picker" value="${state.pictogramFilledColor}" title="Filled color">
+          <input type="color" class="color-picker" id="pictogram-unfilled-color-picker" value="${state.pictogramUnfilledColor}" title="Unfilled color">
+        </div>
       </div>
     </div>
     
@@ -2472,7 +2476,6 @@ function selectPictogramIcon(iconName) {
     renderIconPreview();
     renderPictogramChart();
     closeIconSearchDrawer();
-    showFeedback(`Icon changed to ${iconName}`, 'success');
   }
 }
 
