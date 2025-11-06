@@ -59,6 +59,16 @@ const state = {
   lineMarkerSize: 5,
   lineTension: 0,
   lineWidth: 3,
+  // Pictogram properties
+  pictogramTotal: 10,
+  pictogramFilled: 6.7,
+  pictogramIconsPerRow: 5,
+  pictogramCurrentIcon: 'gas',
+  pictogramIconSvg: '',
+  pictogramFilledColor: '#8628DC',
+  pictogramUnfilledColor: '#e2c4ff',
+  pictogramIconCategories: [],
+  pictogramAllIcons: [],
   chart: null,
   isProcessing: false
 };
@@ -171,6 +181,8 @@ function setProcessing(isProcessing) {
 function initApp() {
   console.log('Initializing ChartFlam app');
   console.log('Chart.js loaded:', typeof Chart !== 'undefined');
+  // Load pictogram icons
+  loadPictogramIcons();
   showSplash();
 }
 
@@ -689,9 +701,13 @@ function handleKeyboardShortcuts(e) {
 // CHART TYPE SELECTION
 // ============================================
 function selectChartType(type) {
+  console.log('selectChartType called with:', type, 'from:', state.currentChartType);
+  
   // Prevent re-rendering if the same chart type is selected
   if (type === state.currentChartType) return;
-
+  
+  // Store previous chart type
+  const previousType = state.currentChartType;
   state.currentChartType = type;
   
   // Update active state and ARIA attributes
@@ -731,18 +747,46 @@ function selectChartType(type) {
   } else { // pie, donut
     state.chartData.labels = ['Category A', 'Category B', 'Category C'];
     state.chartData.datasets[0].data = [30, 50, 20];
+    // Reset to default colors for pie/donut
+    state.chartData.datasets[0].backgroundColor = ['#6A5ACD', '#FFDAB9', '#66C0B4'];
+    state.chartData.datasets[0].borderColor = ['#6A5ACD', '#FFDAB9', '#66C0B4'];
   }
   
   // Ensure colors match data length
   ensureColorsMatchData();
   
+  // Handle switching between pictogram and other chart types
+  if (type === 'pictogram' && state.chart) {
+    // Switching TO pictogram: destroy Chart.js instance
+    state.chart.destroy();
+    state.chart = null;
+  } else if (previousType === 'pictogram' && type !== 'pictogram') {
+    // Switching FROM pictogram: clear the canvas
+    const canvas = document.getElementById('chart-canvas');
+    if (canvas) {
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      // Reset canvas size for Chart.js
+      const container = document.querySelector('.chart-canvas-container');
+      const width = container.clientWidth;
+      canvas.width = width;
+      canvas.height = width; // Reset to square aspect ratio
+    }
+  }
+  
   // Re-initialize inputs and render
-  initDataControls();
-  initManualInput();
-  initStyleControls();
-  initColorControls();
-  initLegendAxisControls();
-  renderChart();
+  if (type === 'pictogram') {
+    initPictogramControls();
+    initPictogramColorsControls();
+    renderPictogramChart();
+  } else {
+    initDataControls();
+    initManualInput();
+    initStyleControls();
+    initColorControls();
+    initLegendAxisControls();
+    renderChart();
+  }
   updateSmoothingVisibility();
 }
 
@@ -751,6 +795,12 @@ function selectChartType(type) {
 // ============================================
 function renderChart() {
   console.log('Rendering chart, type:', state.currentChartType);
+  
+  // Handle pictogram rendering separately
+  if (state.currentChartType === 'pictogram') {
+    renderPictogramChart();
+    return;
+  }
   
   const canvas = document.getElementById('chart-canvas');
   if (!canvas) {
@@ -1290,6 +1340,31 @@ function updateDataFromCSV() {
 // COLOR CONTROLS
 // ============================================
 function initColorControls() {
+  const coloursContent = document.getElementById('colours-content');
+  if (!coloursContent) {
+    console.warn('colours-content element not found');
+    return;
+  }
+  
+  // Rebuild the entire colours-content structure for non-pictogram charts
+  coloursContent.innerHTML = `
+    <div id="color-controls" role="group" aria-label="Segment colours"></div>
+    <div class="color-control bg-control">
+      <span class="color-label">Background</span>
+      <div class="bg-options">
+        <button class="bg-option active" data-bg="white" aria-label="White background">
+          <span class="bg-circle bg-white"></span>
+        </button>
+        <button class="bg-option" data-bg="transparent" aria-label="Transparent background">
+          <span class="bg-circle bg-transparent"></span>
+        </button>
+        <button class="bg-option" data-bg="rainbow" aria-label="Rainbow gradient background">
+          <span class="bg-circle bg-rainbow"></span>
+        </button>
+      </div>
+    </div>
+  `;
+  
   const container = document.getElementById('color-controls');
   container.innerHTML = '';
 
@@ -1329,6 +1404,47 @@ function initColorControls() {
       const colorPicker = control.querySelector('.color-picker');
       colorPicker.addEventListener('input', (e) => {
         updateSegmentColor(index, e.target.value);
+      });
+    });
+  }
+  
+  // Re-attach background color listeners
+  const bgWhite = document.querySelector('.bg-option[data-bg="white"]');
+  const bgTransparent = document.querySelector('.bg-option[data-bg="transparent"]');
+  const bgRainbow = document.querySelector('.bg-option[data-bg="rainbow"]');
+  
+  if (bgWhite) {
+    bgWhite.addEventListener('click', () => {
+      document.querySelectorAll('.bg-option').forEach(b => b.classList.remove('active'));
+      bgWhite.classList.add('active');
+      updateBackgroundColor('white');
+    });
+  }
+  
+  if (bgTransparent) {
+    bgTransparent.addEventListener('click', () => {
+      document.querySelectorAll('.bg-option').forEach(b => b.classList.remove('active'));
+      bgTransparent.classList.add('active');
+      updateBackgroundColor('transparent');
+    });
+  }
+  
+  if (bgRainbow) {
+    bgRainbow.addEventListener('click', () => {
+      const colorInput = document.createElement('input');
+      colorInput.type = 'color';
+      colorInput.value = state.chartBackgroundColor === 'transparent' ? '#FFFFFF' : state.chartBackgroundColor;
+      colorInput.click();
+      colorInput.addEventListener('input', (e) => {
+        state.chartBackgroundColor = e.target.value;
+        document.querySelector('.chart-canvas-wrapper').style.backgroundColor = e.target.value;
+        document.querySelectorAll('.bg-option').forEach(b => b.classList.remove('active'));
+        bgRainbow.classList.add('active');
+        
+        if (state.currentChartType === 'pie' || state.currentChartType === 'donut') {
+          state.chartData.datasets[0].borderColor = e.target.value;
+          renderChart();
+        }
       });
     });
   }
@@ -1496,7 +1612,18 @@ function updateSmoothingSlider() {
 
 function updateSmoothingVisibility() {
   const styleControl = document.getElementById('style-control');
+  const legendControl = document.querySelector('summary[aria-controls="legend-content"]')?.parentElement;
   const holeToggle = document.getElementById('donut-hole-toggle');
+  
+  // Hide style, legend, and axis controls for pictogram
+  if (state.currentChartType === 'pictogram') {
+    styleControl.style.display = 'none';
+    if (legendControl) legendControl.style.display = 'none';
+    return;
+  }
+  
+  // Show legend for other chart types
+  if (legendControl) legendControl.style.display = '';
   
   const isStyleVisible = ['pie', 'donut', 'bar', 'line'].includes(state.currentChartType);
   styleControl.style.display = isStyleVisible ? '' : 'none';
@@ -1859,6 +1986,494 @@ function getSVGIcon(type) {
   };
 
   return icons[type] || icons.pie;
+}
+
+// ============================================
+// PICTOGRAM CHART FUNCTIONS
+// ============================================
+
+// Load pictogram icons from global variable (loaded from pictogram-icons.js)
+function loadPictogramIcons() {
+  try {
+    // Check if PICTOGRAM_ICONS is available (loaded from pictogram-icons.js)
+    if (typeof PICTOGRAM_ICONS === 'undefined') {
+      console.error('PICTOGRAM_ICONS not found. Make sure pictogram-icons.js is loaded.');
+      return;
+    }
+    
+    const icons = PICTOGRAM_ICONS;
+    
+    if (!icons || icons.length === 0) {
+      console.error('No icons data available');
+      return;
+    }
+    
+    // Store all icons
+    state.pictogramAllIcons = icons;
+    
+    // Group by categories
+    const categories = {};
+    icons.forEach(icon => {
+      if (!categories[icon.category]) {
+        categories[icon.category] = [];
+      }
+      categories[icon.category].push(icon);
+    });
+    state.pictogramIconCategories = categories;
+    
+    // Set default icon (gas)
+    const defaultIcon = icons.find(icon => icon.name === 'gas');
+    if (defaultIcon) {
+      state.pictogramIconSvg = sanitizeSvg(defaultIcon.svg);
+      console.log('Default icon (gas) loaded successfully');
+    }
+    
+    console.log('Pictogram icons loaded:', Object.keys(categories).length, 'categories,', icons.length, 'total icons');
+  } catch (error) {
+    console.error('Error in loadPictogramIcons:', error);
+  }
+}
+
+// Sanitize SVG - remove width/height, ensure viewBox
+function sanitizeSvg(svgString) {
+  // Parse the SVG string
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(svgString, 'image/svg+xml');
+  const svg = doc.querySelector('svg');
+  
+  if (!svg) return svgString;
+  
+  // Remove width and height attributes
+  svg.removeAttribute('width');
+  svg.removeAttribute('height');
+  
+  // Ensure viewBox exists (use default if not present)
+  if (!svg.hasAttribute('viewBox')) {
+    svg.setAttribute('viewBox', '0 0 24 24');
+  }
+  
+  // Return cleaned SVG
+  return svg.outerHTML;
+}
+
+// Render SVG to canvas
+function renderSvgToCanvas(ctx, svgString, x, y, width, height, color) {
+  return new Promise((resolve, reject) => {
+    // Replace currentColor with actual color
+    const coloredSvg = svgString.replace(/currentColor/g, color);
+    
+    // Create image from SVG
+    const img = new Image();
+    const blob = new Blob([coloredSvg], { type: 'image/svg+xml' });
+    const url = URL.createObjectURL(blob);
+    
+    img.onload = () => {
+      ctx.drawImage(img, x, y, width, height);
+      URL.revokeObjectURL(url);
+      resolve();
+    };
+    
+    img.onerror = reject;
+    img.src = url;
+  });
+}
+
+// Calculate pictogram layout
+function calculatePictogramLayout() {
+  const canvas = document.getElementById('chart-canvas');
+  const canvasWidth = canvas.width;
+  const iconsPerRow = state.pictogramIconsPerRow;
+  const totalIcons = state.pictogramTotal;
+  
+  // Calculate rows needed
+  const rows = Math.ceil(totalIcons / iconsPerRow);
+  
+  // Icon sizing with padding
+  const padding = 20;
+  const availableWidth = canvasWidth - (padding * 2);
+  const iconSpacing = 3; // Reduced spacing between icons (adjust this value to change spacing)
+  const iconWidth = (availableWidth - (iconSpacing * (iconsPerRow - 1))) / iconsPerRow;
+  const iconHeight = iconWidth; // Keep square
+  
+  // Calculate canvas height needed
+  const canvasHeight = (rows * iconHeight) + ((rows - 1) * iconSpacing) + (padding * 2);
+  
+  console.log('Layout calc: iconWidth=', iconWidth, 'iconSpacing=', iconSpacing, 'rows=', rows, 'canvasHeight=', canvasHeight);
+  
+  // Build positions array
+  const positions = [];
+  for (let i = 0; i < totalIcons; i++) {
+    const row = Math.floor(i / iconsPerRow);
+    const col = i % iconsPerRow;
+    
+    positions.push({
+      x: padding + (col * (iconWidth + iconSpacing)),
+      y: padding + (row * (iconHeight + iconSpacing)),
+      width: iconWidth,
+      height: iconHeight
+    });
+  }
+  
+  return { positions, canvasHeight };
+}
+
+// Main pictogram render function
+let renderPictogramRetryCount = 0;
+async function renderPictogramChart() {
+  console.log('renderPictogramChart called');
+  
+  // Check if icons are loaded
+  if (!state.pictogramIconSvg) {
+    renderPictogramRetryCount++;
+    if (renderPictogramRetryCount > 50) { // Max 5 seconds (50 * 100ms)
+      console.error('Failed to load pictogram icons after multiple retries');
+      renderPictogramRetryCount = 0;
+      return;
+    }
+    console.warn('Pictogram SVG not loaded yet, waiting... (retry', renderPictogramRetryCount, ')');
+    setTimeout(renderPictogramChart, 100);
+    return;
+  }
+  
+  // Reset retry count on successful load
+  renderPictogramRetryCount = 0;
+  
+  const canvas = document.getElementById('chart-canvas');
+  const ctx = canvas.getContext('2d');
+  
+  // Set canvas width
+  const container = document.querySelector('.chart-canvas-container');
+  const width = container.clientWidth;
+  canvas.width = width;
+  
+  // Calculate layout
+  const { positions, canvasHeight } = calculatePictogramLayout();
+  
+  // Set canvas height
+  canvas.height = canvasHeight;
+  
+  // Clear canvas
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  
+  // Calculate full vs partial icons
+  const filled = state.pictogramFilled;
+  const fullIcons = Math.floor(filled);
+  const partialAmount = filled % 1;
+  
+  console.log('Rendering', state.pictogramTotal, 'icons,', filled, 'filled');
+  
+  // Render each icon
+  for (let i = 0; i < positions.length; i++) {
+    const pos = positions[i];
+    let color;
+    
+    if (i < fullIcons) {
+      // Full filled icon
+      color = state.pictogramFilledColor;
+      await renderSvgToCanvas(ctx, state.pictogramIconSvg, pos.x, pos.y, pos.width, pos.height, color);
+    } else if (i === fullIcons && partialAmount > 0) {
+      // Partial filled icon - use clipping
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(pos.x, pos.y, pos.width * partialAmount, pos.height);
+      ctx.clip();
+      color = state.pictogramFilledColor;
+      await renderSvgToCanvas(ctx, state.pictogramIconSvg, pos.x, pos.y, pos.width, pos.height, color);
+      ctx.restore();
+      
+      // Draw the unfilled portion
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(pos.x + (pos.width * partialAmount), pos.y, pos.width * (1 - partialAmount), pos.height);
+      ctx.clip();
+      color = state.pictogramUnfilledColor;
+      await renderSvgToCanvas(ctx, state.pictogramIconSvg, pos.x, pos.y, pos.width, pos.height, color);
+      ctx.restore();
+    } else {
+      // Unfilled icon
+      color = state.pictogramUnfilledColor;
+      await renderSvgToCanvas(ctx, state.pictogramIconSvg, pos.x, pos.y, pos.width, pos.height, color);
+    }
+  }
+}
+
+// Initialize pictogram controls
+function initPictogramControls() {
+  const dataContent = document.getElementById('data-content');
+  
+  dataContent.innerHTML = `
+    <div class="pictogram-data-row" style="display: flex; align-items: center; gap: var(--spacing-sm); margin-bottom: var(--spacing-md);">
+      <span style="font-weight: 600; min-width: 50px;">Total</span>
+      <input type="range" id="pictogram-total-slider" min="10" max="100" step="10" value="${state.pictogramTotal}" style="flex: 1;">
+      <input type="number" id="pictogram-total-input" min="10" max="100" value="${state.pictogramTotal}" class="pictogram-input-box">
+      <div id="pictogram-icon-display" class="pictogram-input-box" style="display: flex; align-items: center; justify-content: center; cursor: pointer; background: white;">
+        <div id="pictogram-icon-preview" style="width: 30px; height: 30px;"></div>
+      </div>
+    </div>
+    
+    <div class="pictogram-data-row" style="display: flex; align-items: center; gap: var(--spacing-sm);">
+      <span style="font-weight: 600; min-width: 50px;">Filled</span>
+      <input type="number" id="pictogram-filled-input" min="0" max="${state.pictogramTotal}" step="0.1" value="${state.pictogramFilled}" class="pictogram-input-box">
+      <div style="flex: 1;"></div>
+      <span style="font-weight: 600;">Icons per row</span>
+      <button class="text-control-btn pictogram-input-box ${state.pictogramIconsPerRow === 5 ? 'active' : ''}" id="pictogram-per-row-5" data-value="5">5</button>
+      <button class="text-control-btn pictogram-input-box ${state.pictogramIconsPerRow === 10 ? 'active' : ''}" id="pictogram-per-row-10" data-value="10">10</button>
+    </div>
+  `;
+  
+  // Render icon preview
+  renderIconPreview();
+  
+  // Event listeners
+  document.getElementById('pictogram-total-slider').addEventListener('input', (e) => {
+    const value = parseInt(e.target.value);
+    state.pictogramTotal = value;
+    document.getElementById('pictogram-total-input').value = value;
+    document.getElementById('pictogram-filled-input').max = value;
+    renderPictogramChart();
+  });
+  
+  document.getElementById('pictogram-total-input').addEventListener('input', debounce((e) => {
+    let value = parseInt(e.target.value);
+    if (value < 10) value = 10;
+    if (value > 100) value = 100;
+    state.pictogramTotal = value;
+    document.getElementById('pictogram-total-slider').value = value;
+    document.getElementById('pictogram-filled-input').max = value;
+    renderPictogramChart();
+  }, 300));
+  
+  document.getElementById('pictogram-filled-input').addEventListener('input', debounce((e) => {
+    let value = parseFloat(e.target.value);
+    if (value < 0) value = 0;
+    if (value > state.pictogramTotal) value = state.pictogramTotal;
+    state.pictogramFilled = value;
+    renderPictogramChart();
+  }, 300));
+  
+  document.getElementById('pictogram-per-row-5').addEventListener('click', () => {
+    state.pictogramIconsPerRow = 5;
+    document.getElementById('pictogram-per-row-5').classList.add('active');
+    document.getElementById('pictogram-per-row-10').classList.remove('active');
+    renderPictogramChart();
+  });
+  
+  document.getElementById('pictogram-per-row-10').addEventListener('click', () => {
+    state.pictogramIconsPerRow = 10;
+    document.getElementById('pictogram-per-row-10').classList.add('active');
+    document.getElementById('pictogram-per-row-5').classList.remove('active');
+    renderPictogramChart();
+  });
+  
+  document.getElementById('pictogram-icon-display').addEventListener('click', openIconSearchDrawer);
+}
+
+// Render icon preview in data controls
+let iconPreviewRetryCount = 0;
+function renderIconPreview() {
+  const preview = document.getElementById('pictogram-icon-preview');
+  if (!preview) {
+    console.warn('Icon preview element not found');
+    return;
+  }
+  
+  if (!state.pictogramIconSvg) {
+    iconPreviewRetryCount++;
+    if (iconPreviewRetryCount > 50) {
+      console.error('Failed to load icon for preview after multiple retries');
+      iconPreviewRetryCount = 0;
+      return;
+    }
+    console.warn('No icon SVG loaded yet (retry', iconPreviewRetryCount, ')');
+    setTimeout(renderIconPreview, 100);
+    return;
+  }
+  
+  // Reset retry count
+  iconPreviewRetryCount = 0;
+  
+  const coloredSvg = state.pictogramIconSvg.replace(/currentColor/g, state.pictogramFilledColor);
+  preview.innerHTML = coloredSvg;
+  console.log('Icon preview rendered');
+}
+
+// Initialize pictogram colors controls
+function initPictogramColorsControls() {
+  const coloursContent = document.getElementById('colours-content');
+  if (!coloursContent) {
+    console.warn('colours-content element not found');
+    return;
+  }
+  
+  coloursContent.innerHTML = `
+    <div style="margin-bottom: var(--spacing-md); padding-bottom: var(--spacing-md); border-bottom: 1px solid #e0e0e0;">
+      <div class="color-control">
+        <span class="color-label">Filled</span>
+        <input type="color" class="color-picker" id="pictogram-filled-color-picker" value="${state.pictogramFilledColor}">
+      </div>
+      <div class="color-control">
+        <span class="color-label">Unfilled</span>
+        <input type="color" class="color-picker" id="pictogram-unfilled-color-picker" value="${state.pictogramUnfilledColor}">
+      </div>
+    </div>
+    
+    <div class="color-control bg-control">
+      <span class="color-label">Background</span>
+      <div class="bg-options">
+        <button class="bg-option active" data-bg="white" aria-label="White background">
+          <span class="bg-circle bg-white"></span>
+        </button>
+        <button class="bg-option" data-bg="transparent" aria-label="Transparent background">
+          <span class="bg-circle bg-transparent"></span>
+        </button>
+        <button class="bg-option" data-bg="rainbow" aria-label="Rainbow gradient background">
+          <span class="bg-circle bg-rainbow"></span>
+        </button>
+      </div>
+    </div>
+  `;
+  
+  // Event listeners for icon colors
+  document.getElementById('pictogram-filled-color-picker').addEventListener('input', (e) => {
+    state.pictogramFilledColor = e.target.value;
+    renderIconPreview();
+    renderPictogramChart();
+  });
+  
+  document.getElementById('pictogram-unfilled-color-picker').addEventListener('input', (e) => {
+    state.pictogramUnfilledColor = e.target.value;
+    renderPictogramChart();
+  });
+  
+  // Background color options (reuse existing logic)
+  const bgWhite = document.querySelector('.bg-option[data-bg="white"]');
+  const bgTransparent = document.querySelector('.bg-option[data-bg="transparent"]');
+  const bgRainbow = document.querySelector('.bg-option[data-bg="rainbow"]');
+  
+  bgWhite.addEventListener('click', () => {
+    document.querySelectorAll('.bg-option').forEach(b => b.classList.remove('active'));
+    bgWhite.classList.add('active');
+    updateBackgroundColor('white');
+  });
+  
+  bgTransparent.addEventListener('click', () => {
+    document.querySelectorAll('.bg-option').forEach(b => b.classList.remove('active'));
+    bgTransparent.classList.add('active');
+    updateBackgroundColor('transparent');
+  });
+  
+  bgRainbow.addEventListener('click', () => {
+    const colorInput = document.createElement('input');
+    colorInput.type = 'color';
+    colorInput.value = state.chartBackgroundColor === 'transparent' ? '#FFFFFF' : state.chartBackgroundColor;
+    colorInput.click();
+    colorInput.addEventListener('input', (e) => {
+      state.chartBackgroundColor = e.target.value;
+      document.querySelector('.chart-canvas-wrapper').style.backgroundColor = e.target.value;
+      document.querySelectorAll('.bg-option').forEach(b => b.classList.remove('active'));
+      bgRainbow.classList.add('active');
+    });
+  });
+}
+
+// Open icon search drawer
+function openIconSearchDrawer() {
+  // Create drawer overlay
+  const drawer = document.createElement('div');
+  drawer.id = 'icon-search-drawer';
+  drawer.innerHTML = `
+    <div class="drawer-header">
+      <button id="close-drawer" class="btn-close" aria-label="Close">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="24" height="24">
+          <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+        </svg>
+      </button>
+      <div class="category-dropdown">
+        <label for="category-select">Icon Category</label>
+        <select id="category-select">
+          <option value="">All Categories</option>
+          ${Object.keys(state.pictogramIconCategories).map(cat => 
+            `<option value="${cat}">${cat}</option>`
+          ).join('')}
+        </select>
+      </div>
+    </div>
+    <div class="drawer-content" id="drawer-icon-grid">
+      ${renderIconGrid()}
+    </div>
+  `;
+  
+  document.body.appendChild(drawer);
+  
+  // Event listeners
+  document.getElementById('close-drawer').addEventListener('click', closeIconSearchDrawer);
+  document.getElementById('category-select').addEventListener('change', (e) => {
+    const category = e.target.value;
+    if (category) {
+      const categoryHeader = document.querySelector(`[data-category="${category}"]`);
+      if (categoryHeader) {
+        const drawer = document.getElementById('icon-search-drawer');
+        const headerHeight = document.querySelector('.drawer-header').offsetHeight;
+        const categoryTop = categoryHeader.offsetTop;
+        // Scroll with offset to account for sticky header
+        drawer.scrollTop = categoryTop - headerHeight - 10;
+      }
+    }
+  });
+  
+  // Add click listeners to icons
+  document.querySelectorAll('.icon-item').forEach(item => {
+    item.addEventListener('click', () => {
+      const iconName = item.dataset.iconName;
+      selectPictogramIcon(iconName);
+    });
+  });
+}
+
+// Close icon search drawer
+function closeIconSearchDrawer() {
+  const drawer = document.getElementById('icon-search-drawer');
+  if (drawer) {
+    drawer.remove();
+  }
+}
+
+// Render icon grid HTML
+function renderIconGrid() {
+  let html = '';
+  
+  Object.keys(state.pictogramIconCategories).forEach(category => {
+    html += `<div class="icon-category-header" data-category="${category}">${category}</div>`;
+    html += '<div class="icon-grid">';
+    
+    state.pictogramIconCategories[category].forEach(icon => {
+      html += `
+        <div class="icon-item" data-icon-name="${icon.name}" title="${icon.name}">
+          ${icon.svg}
+        </div>
+      `;
+    });
+    
+    html += '</div>';
+  });
+  
+  // Add bottom padding so last categories can scroll to top
+  html += '<div style="height: 80vh;"></div>';
+  
+  return html;
+}
+
+// Select pictogram icon
+function selectPictogramIcon(iconName) {
+  const icon = state.pictogramAllIcons.find(i => i.name === iconName);
+  if (icon) {
+    state.pictogramCurrentIcon = iconName;
+    state.pictogramIconSvg = sanitizeSvg(icon.svg);
+    renderIconPreview();
+    renderPictogramChart();
+    closeIconSearchDrawer();
+    showFeedback(`Icon changed to ${iconName}`, 'success');
+  }
 }
 
 // ============================================
