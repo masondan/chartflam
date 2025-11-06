@@ -2337,17 +2337,17 @@ function initPictogramColorsControls() {
     </div>
   `;
   
-  // Event listeners for icon colors
-  document.getElementById('pictogram-filled-color-picker').addEventListener('input', (e) => {
+  // Event listeners for icon colors (debounced to prevent flickering)
+  document.getElementById('pictogram-filled-color-picker').addEventListener('input', debounce((e) => {
     state.pictogramFilledColor = e.target.value;
     renderIconPreview();
     renderPictogramChart();
-  });
+  }, 150));
   
-  document.getElementById('pictogram-unfilled-color-picker').addEventListener('input', (e) => {
+  document.getElementById('pictogram-unfilled-color-picker').addEventListener('input', debounce((e) => {
     state.pictogramUnfilledColor = e.target.value;
     renderPictogramChart();
-  });
+  }, 150));
   
   // Background color options (reuse existing logic)
   const bgWhite = document.querySelector('.bg-option[data-bg="white"]');
