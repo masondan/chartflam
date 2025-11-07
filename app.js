@@ -230,6 +230,26 @@ function initApp() {
     showSplash();
 }
 
+// Fix Coloris button to show color instead of text
+function fixColorisButton(field) {
+    console.log('fixColorisButton called for field:', field);
+    const button = field.querySelector('button');
+    const input = field.querySelector('input[data-coloris]');
+    
+    console.log('Button:', button, 'Input:', input);
+    
+    if (button && input) {
+        const color = input.value;
+        console.log('Setting button color to:', color);
+        // Set background color
+        button.style.backgroundColor = color;
+        // Clear any text content
+        button.textContent = '';
+        button.setAttribute('aria-label', `Color ${color}`);
+        console.log('Button after fix - backgroundColor:', button.style.backgroundColor, 'textContent:', button.textContent);
+    }
+}
+
 // Initialize Coloris with branded palette
 function initColoris() {
     if (typeof Coloris !== 'undefined') {
@@ -256,21 +276,34 @@ function initColoris() {
             ]
         });
         
-        // Aggressively remove text from Coloris buttons
-        setInterval(() => {
-            document.querySelectorAll('.clr-field button').forEach(btn => {
-                // Set empty text content
-                if (btn.firstChild && btn.firstChild.nodeType === Node.TEXT_NODE) {
-                    btn.firstChild.textContent = '';
-                }
-                // Also try innerHTML
-                const bgColor = btn.style.backgroundColor;
-                btn.innerHTML = '';
-                btn.style.backgroundColor = bgColor;
+        // Watch for Coloris field creation and fix button display
+        const observer = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                mutation.addedNodes.forEach((node) => {
+                    if (node.nodeType === 1) { // Element node
+                        // Check if this node or its children have clr-field class
+                        if (node.classList && node.classList.contains('clr-field')) {
+                            console.log('Found .clr-field via classList:', node);
+                            fixColorisButton(node);
+                        }
+                        // Also check children
+                        const fields = node.querySelectorAll && node.querySelectorAll('.clr-field');
+                        if (fields && fields.length > 0) {
+                            console.log('Found', fields.length, '.clr-field children');
+                            fields.forEach(field => fixColorisButton(field));
+                        }
+                    }
+                });
             });
-        }, 100);
+        });
         
-        console.log('Coloris initialized');
+        // Start observing the document for changes
+        observer.observe(document.body, {
+            childList: true,
+            subtree: true
+        });
+        
+        console.log('Coloris initialized with MutationObserver');
     } else {
         console.warn('Coloris library not loaded');
     }
@@ -1482,6 +1515,7 @@ function initColorControls() {
             // Update all color pickers to reflect the new base color
             document.querySelectorAll('.bar-color-picker').forEach(picker => {
                 picker.value = state.barBaseColor;
+                picker.style.backgroundColor = state.barBaseColor;
             });
         });
 
@@ -1516,6 +1550,7 @@ function initColorControls() {
                 state.chartData.datasets[0].backgroundColor[index] = state.barBaseColor;
                 state.chartData.datasets[0].borderColor[index] = state.barBaseColor;
                 colorPicker.value = state.barBaseColor;
+                colorPicker.style.backgroundColor = state.barBaseColor;
                 renderChart();
             });
         });
@@ -1539,6 +1574,23 @@ function initColorControls() {
             });
         });
     }
+
+    // Set background colors on color picker inputs
+    setTimeout(() => {
+        const colorInputs = document.querySelectorAll('input[data-coloris]');
+        console.log('Setting background colors for', colorInputs.length, 'color inputs');
+        
+        colorInputs.forEach(input => {
+            const color = input.value;
+            input.style.backgroundColor = color;
+            console.log('Set input background to:', color);
+            
+            // Also listen for changes to update the background
+            input.addEventListener('input', (e) => {
+                e.target.style.backgroundColor = e.target.value;
+            });
+        });
+    }, 100);
 
     // Re-attach background color listeners
     const bgWhite = document.querySelector('.bg-option[data-bg="white"]');
@@ -2614,16 +2666,28 @@ function initPictogramColorsControls() {
   `;
 
     // Event listeners for icon colors (debounced to prevent flickering)
-    document.getElementById('pictogram-filled-color-picker').addEventListener('input', debounce((e) => {
+    const filledPicker = document.getElementById('pictogram-filled-color-picker');
+    const unfilledPicker = document.getElementById('pictogram-unfilled-color-picker');
+    
+    filledPicker.addEventListener('input', debounce((e) => {
         state.pictogramFilledColor = e.target.value;
+        e.target.style.backgroundColor = e.target.value; // Update background
         renderIconPreview();
         renderPictogramChart();
     }, 150));
 
-    document.getElementById('pictogram-unfilled-color-picker').addEventListener('input', debounce((e) => {
+    unfilledPicker.addEventListener('input', debounce((e) => {
         state.pictogramUnfilledColor = e.target.value;
+        e.target.style.backgroundColor = e.target.value; // Update background
         renderPictogramChart();
     }, 150));
+
+    // Set initial background colors
+    setTimeout(() => {
+        filledPicker.style.backgroundColor = state.pictogramFilledColor;
+        unfilledPicker.style.backgroundColor = state.pictogramUnfilledColor;
+        console.log('Set pictogram color backgrounds:', state.pictogramFilledColor, state.pictogramUnfilledColor);
+    }, 100);
 
     // Background color options (reuse existing logic)
     const bgWhite = document.querySelector('.bg-option[data-bg="white"]');
