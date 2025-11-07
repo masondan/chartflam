@@ -419,6 +419,7 @@ body {
 
 .manual-row input {
     flex: 1;
+    min-width: 0; /* Fix for flex item overflow on some mobile browsers */
     padding: var(--spacing-sm);
     border: 1px solid var(--bg-medium);
     border-radius: var(--radius-sm);
