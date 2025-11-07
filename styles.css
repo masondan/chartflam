@@ -1179,6 +1179,77 @@ button[aria-busy="true"]::after {
 }
 
 /* ============================================
+   COLORIS CUSTOMIZATION
+   ============================================ */
+
+/* Coloris wrapper */
+.clr-field {
+    border: none !important;
+    border-radius: 50% !important;
+    width: 32px !important;
+    height: 32px !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    display: inline-block !important;
+    position: relative !important;
+}
+
+/* Coloris button - shows the color swatch */
+.clr-field button {
+    width: 32px !important;
+    height: 32px !important;
+    min-width: 32px !important;
+    border-radius: 50% !important;
+    border: 2px solid var(--bg-medium) !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    cursor: pointer !important;
+    transition: border-color 0.2s ease !important;
+    position: relative !important;
+    /* Hide text content */
+    color: transparent !important;
+    font-size: 0 !important;
+    line-height: 0 !important;
+    text-indent: -9999px !important;
+    overflow: hidden !important;
+}
+
+/* Cover text with pseudo-element showing background color */
+.clr-field button::before {
+    content: '' !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    background: inherit !important;
+    border-radius: 50% !important;
+    z-index: 1 !important;
+}
+
+.clr-field button:hover {
+    border-color: var(--text-medium) !important;
+}
+
+/* Hide all child elements inside the button */
+.clr-field button * {
+    visibility: hidden !important;
+    font-size: 0 !important;
+    opacity: 0 !important;
+    position: relative !important;
+    z-index: 0 !important;
+}
+
+/* Hide the actual input field */
+.clr-field input {
+    position: absolute !important;
+    opacity: 0 !important;
+    width: 0 !important;
+    height: 0 !important;
+    pointer-events: none !important;
+}
+
+/* ============================================
    PICTOGRAM COMPONENTS
    ============================================ */
 

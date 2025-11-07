@@ -177,15 +177,103 @@ function setProcessing(isProcessing) {
     }
 }
 
+// Show background color picker
+function showBackgroundColorPicker(rainbowButton) {
+    let colorInput = rainbowButton.querySelector('input[data-coloris]');
+    
+    if (!colorInput) {
+        colorInput = document.createElement('input');
+        colorInput.type = 'text';
+        colorInput.setAttribute('data-coloris', '');
+        colorInput.style.position = 'absolute';
+        colorInput.style.opacity = '0';
+        colorInput.style.width = '100%';
+        colorInput.style.height = '100%';
+        colorInput.style.top = '0';
+        colorInput.style.left = '0';
+        colorInput.style.cursor = 'pointer';
+        
+        colorInput.addEventListener('input', (e) => {
+            state.chartBackgroundColor = e.target.value;
+            document.querySelector('.chart-canvas-wrapper').style.backgroundColor = e.target.value;
+            document.querySelectorAll('.bg-option').forEach(b => b.classList.remove('active'));
+            rainbowButton.classList.add('active');
+            updateBackgroundColor(e.target.value, true);
+        });
+        
+        rainbowButton.style.position = 'relative';
+        rainbowButton.appendChild(colorInput);
+        
+        // Give the browser time to position the input before clicking
+        setTimeout(() => {
+            colorInput.value = state.chartBackgroundColor === 'transparent' ? '#FFFFFF' : state.chartBackgroundColor;
+            colorInput.click();
+        }, 10);
+    } else {
+        colorInput.value = state.chartBackgroundColor === 'transparent' ? '#FFFFFF' : state.chartBackgroundColor;
+        colorInput.click();
+    }
+}
+
 // ============================================
 // INITIALIZATION
 // ============================================
 function initApp() {
     console.log('Initializing ChartFlam app');
     console.log('Chart.js loaded:', typeof Chart !== 'undefined');
+    
+    // Initialize Coloris color picker
+    initColoris();
+    
     // Load pictogram icons
     loadPictogramIcons();
     showSplash();
+}
+
+// Initialize Coloris with branded palette
+function initColoris() {
+    if (typeof Coloris !== 'undefined') {
+        Coloris({
+            themeMode: 'light',
+            alpha: false,
+            formatToggle: false,
+            closeButton: false,
+            clearButton: false,
+            format: 'hex',
+            swatches: [
+                '#6A5ACD', // Slate Blue
+                '#FFDAB9', // Peach Puff
+                '#66C0B4', // Medium Aquamarine
+                '#E6E6FA', // Lavender
+                '#DDA0DD', // Plum
+                '#ADD8E6', // Light Blue
+                '#FAEBD7', // Antique White
+                '#C0C0C0', // Silver
+                '#8A2BE2', // Blue Violet
+                '#FFD700', // Gold
+                '#DC143C', // Crimson
+                '#555555'  // Dark Gray
+            ]
+        });
+        
+        // Aggressively remove text from Coloris buttons
+        setInterval(() => {
+            document.querySelectorAll('.clr-field button').forEach(btn => {
+                // Set empty text content
+                if (btn.firstChild && btn.firstChild.nodeType === Node.TEXT_NODE) {
+                    btn.firstChild.textContent = '';
+                }
+                // Also try innerHTML
+                const bgColor = btn.style.backgroundColor;
+                btn.innerHTML = '';
+                btn.style.backgroundColor = bgColor;
+            });
+        }, 100);
+        
+        console.log('Coloris initialized');
+    } else {
+        console.warn('Coloris library not loaded');
+    }
 }
 
 // ============================================
@@ -328,7 +416,7 @@ function startApp() {
                        min="16" 
                        max="48" 
                        value="${state.titleSize}">
-                <input type="color" id="title-color" class="color-picker" value="${state.titleColor}">
+                <input type="text" id="title-color" class="color-picker" data-coloris value="${state.titleColor}">
               </div>
             </div>
           </div>
@@ -380,7 +468,7 @@ function startApp() {
                        min="12" 
                        max="24" 
                        value="14">
-                <input type="color" id="caption-color" class="color-picker" value="#555555">
+                <input type="text" id="caption-color" class="color-picker" data-coloris value="#555555">
               </div>
             </div>
           </div>
@@ -409,7 +497,7 @@ function startApp() {
                      min="10" 
                      max="18" 
                      value="${state.legendSize}">
-              <input type="color" id="legend-color" class="color-picker" value="${state.legendColor}">
+              <input type="text" id="legend-color" class="color-picker" data-coloris value="${state.legendColor}">
             </div>
           </div>
         </details>
@@ -486,24 +574,8 @@ function initEventListeners() {
         updateBackgroundColor('transparent');
     });
 
-    // Rainbow button opens color picker
     bgRainbow.addEventListener('click', () => {
-        const colorInput = document.createElement('input');
-        colorInput.type = 'color';
-        colorInput.value = state.chartBackgroundColor === 'transparent' ? '#FFFFFF' : state.chartBackgroundColor;
-        colorInput.click();
-        colorInput.addEventListener('input', (e) => {
-            state.chartBackgroundColor = e.target.value;
-            document.querySelector('.chart-canvas-wrapper').style.backgroundColor = e.target.value;
-            document.querySelectorAll('.bg-option').forEach(b => b.classList.remove('active'));
-            bgRainbow.classList.add('active');
-
-            // Update pie gaps
-            if (state.currentChartType === 'pie' || state.currentChartType === 'donut') {
-                state.chartData.datasets[0].borderColor = e.target.value;
-                renderChart();
-            }
-        });
+        showBackgroundColorPicker(bgRainbow);
     });
 
     // Title controls
@@ -1373,11 +1445,11 @@ function initColorControls() {
         container.innerHTML = `
       <div class="color-control">
         <span class="color-label">Line</span>
-        <input type="color" class="color-picker" id="line-color-picker" value="${state.lineChartLineColor}">
+        <input type="text" class="color-picker" data-coloris id="line-color-picker" value="${state.lineChartLineColor}">
       </div>
       <div class="color-control">
         <span class="color-label">Markers</span>
-        <input type="color" class="color-picker" id="marker-color-picker" value="${state.lineChartMarkerColor}">
+        <input type="text" class="color-picker" data-coloris id="marker-color-picker" value="${state.lineChartMarkerColor}">
       </div>
     `;
         document.getElementById('line-color-picker').addEventListener('input', (e) => {
@@ -1396,7 +1468,7 @@ function initColorControls() {
         baseControl.className = 'color-control';
         baseControl.innerHTML = `
       <span class="color-label" style="font-weight: 600;">Base Colour</span>
-      <input type="color" class="color-picker" id="bar-base-color-picker" value="${state.barBaseColor}">
+      <input type="text" class="color-picker" data-coloris id="bar-base-color-picker" value="${state.barBaseColor}">
     `;
         container.appendChild(baseControl);
 
@@ -1426,7 +1498,7 @@ function initColorControls() {
               <path d="M5.46257 4.43262C7.21556 2.91688 9.5007 2 12 2C17.5228 2 22 6.47715 22 12C22 14.1361 21.3302 16.1158 20.1892 17.7406L17 12H20C20 7.58172 16.4183 4 12 4C9.84982 4 7.89777 4.84827 6.46023 6.22842L5.46257 4.43262ZM18.5374 19.5674C16.7844 21.0831 14.4993 22 12 22C6.47715 22 2 17.5228 2 12C2 9.86386 2.66979 7.88416 3.8108 6.25944L7 12H4C4 16.4183 7.58172 20 12 20C14.1502 20 16.1022 19.1517 17.5398 17.7716L18.5374 19.5674Z"></path>
             </svg>
           </button>
-          <input type="color" class="color-picker bar-color-picker" value="${state.chartData.datasets[0].backgroundColor[index]}" data-index="${index}">
+          <input type="text" class="color-picker bar-color-picker" data-coloris value="${state.chartData.datasets[0].backgroundColor[index]}" data-index="${index}">
         </div>
       `;
 
@@ -1455,7 +1527,7 @@ function initColorControls() {
 
             control.innerHTML = `
         <span class="color-label">${label}</span>
-        <input type="color" class="color-picker" value="${state.chartData.datasets[0].backgroundColor[index]}" data-index="${index}">
+        <input type="text" class="color-picker" data-coloris value="${state.chartData.datasets[0].backgroundColor[index]}" data-index="${index}">
       `;
 
             container.appendChild(control);
@@ -1491,21 +1563,7 @@ function initColorControls() {
 
     if (bgRainbow) {
         bgRainbow.addEventListener('click', () => {
-            const colorInput = document.createElement('input');
-            colorInput.type = 'color';
-            colorInput.value = state.chartBackgroundColor === 'transparent' ? '#FFFFFF' : state.chartBackgroundColor;
-            colorInput.click();
-            colorInput.addEventListener('input', (e) => {
-                state.chartBackgroundColor = e.target.value;
-                document.querySelector('.chart-canvas-wrapper').style.backgroundColor = e.target.value;
-                document.querySelectorAll('.bg-option').forEach(b => b.classList.remove('active'));
-                bgRainbow.classList.add('active');
-
-                if (state.currentChartType === 'pie' || state.currentChartType === 'donut') {
-                    state.chartData.datasets[0].borderColor = e.target.value;
-                    renderChart();
-                }
-            });
+            showBackgroundColorPicker(bgRainbow);
         });
     }
 }
@@ -1533,21 +1591,24 @@ function ensureColorsMatchData() {
 // ============================================
 // CHART STYLING
 // ============================================
-function updateBackgroundColor(bgType) {
+function updateBackgroundColor(bgType, isCustomColor = false) {
     let backgroundColor;
 
-    switch (bgType) {
-        case 'white':
-            backgroundColor = '#FFFFFF';
-            break;
-        case 'transparent':
-            backgroundColor = 'transparent';
-            break;
-        case 'rainbow':
-            backgroundColor = 'linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%)';
-            break;
-        default:
-            backgroundColor = '#FFFFFF';
+    if (isCustomColor) {
+        backgroundColor = bgType;
+    } else {
+        switch (bgType) {
+            case 'white':
+                break;
+            case 'transparent':
+                backgroundColor = 'transparent';
+                break;
+            case 'rainbow':
+                backgroundColor = 'linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%)';
+                break;
+            default:
+                backgroundColor = '#FFFFFF';
+        }
     }
 
     state.chartBackgroundColor = backgroundColor;
@@ -1563,13 +1624,11 @@ function updateBackgroundColor(bgType) {
 
     // Update border color for pie/donut gaps
     if (state.currentChartType === 'pie' || state.currentChartType === 'donut') {
-        if (bgType === 'white') {
-            state.chartData.datasets[0].borderColor = '#FFFFFF';
-        } else {
-            state.chartData.datasets[0].borderColor = 'transparent';
-        }
-        renderChart();
+        // Use the actual background color for the border, or transparent if the bg is transparent
+        state.chartData.datasets[0].borderColor = backgroundColor === 'transparent' ? 'transparent' : backgroundColor;
     }
+
+    renderChart();
 }
 
 function updateSmoothing() {
@@ -2532,8 +2591,8 @@ function initPictogramColorsControls() {
       <div style="display: flex; align-items: center; justify-content: space-between;">
         <span class="color-label">Icons</span>
         <div style="display: flex; gap: var(--spacing-sm);">
-          <input type="color" class="color-picker" id="pictogram-filled-color-picker" value="${state.pictogramFilledColor}" title="Filled color">
-          <input type="color" class="color-picker" id="pictogram-unfilled-color-picker" value="${state.pictogramUnfilledColor}" title="Unfilled color">
+          <input type="text" class="color-picker" data-coloris id="pictogram-filled-color-picker" value="${state.pictogramFilledColor}" title="Filled color">
+          <input type="text" class="color-picker" data-coloris id="pictogram-unfilled-color-picker" value="${state.pictogramUnfilledColor}" title="Unfilled color">
         </div>
       </div>
     </div>
@@ -2584,16 +2643,7 @@ function initPictogramColorsControls() {
     });
 
     bgRainbow.addEventListener('click', () => {
-        const colorInput = document.createElement('input');
-        colorInput.type = 'color';
-        colorInput.value = state.chartBackgroundColor === 'transparent' ? '#FFFFFF' : state.chartBackgroundColor;
-        colorInput.click();
-        colorInput.addEventListener('input', (e) => {
-            state.chartBackgroundColor = e.target.value;
-            document.querySelector('.chart-canvas-wrapper').style.backgroundColor = e.target.value;
-            document.querySelectorAll('.bg-option').forEach(b => b.classList.remove('active'));
-            bgRainbow.classList.add('active');
-        });
+        showBackgroundColorPicker(bgRainbow);
     });
 }
 
