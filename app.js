@@ -763,11 +763,6 @@ function initEventListeners() {
     document.getElementById('download-btn').addEventListener('click', downloadChart);
 
     // Global keyboard shortcuts
-    // Add event listeners for bar orientation buttons if they exist
-    const verticalBtn = document.getElementById('bar-vertical-btn');
-    const horizontalBtn = document.getElementById('bar-horizontal-btn');
-    if (verticalBtn) verticalBtn.addEventListener('click', () => setBarOrientation('vertical'));
-    if (horizontalBtn) horizontalBtn.addEventListener('click', () => setBarOrientation('horizontal'));
     document.addEventListener('keydown', handleKeyboardShortcuts);
 
     // Update details elements aria-expanded on toggle
@@ -1097,6 +1092,10 @@ function initDataControls() {
           </button>
         </div>
       `;
+
+            // Add event listeners for bar orientation buttons
+            document.getElementById('bar-vertical-btn').addEventListener('click', () => setBarOrientation('vertical'));
+            document.getElementById('bar-horizontal-btn').addEventListener('click', () => setBarOrientation('horizontal'));
         } else if (state.currentChartType === 'line') {
             container.innerHTML += `
         <div class="text-controls" style="margin-top: var(--spacing-sm);">
