@@ -1153,45 +1153,10 @@ function initDataControls() {
         } else if (state.currentChartType === 'line') {
             container.innerHTML += `
         <button class="tab-btn" id="apply-csv-btn" style="width: 100%; margin-top: var(--spacing-sm);" aria-label="Apply CSV data to chart">Apply CSV Data</button>
-        <div class="text-controls" style="margin-top: var(--spacing-sm);">
-          <button class="text-control-btn active" id="marker-style-circle" title="Circle markers">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12C22 17.5228 17.5228 22 12 22ZM12 20C16.4183 20 20 16.4183 20 12C20 7.58172 16.4183 4 12 4C7.58172 4 4 7.58172 4 12C4 16.4183 7.58172 20 12 20Z"></path></svg>
-          </button>
-          <button class="text-control-btn" id="marker-style-diamond" title="Diamond markers">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M4.03607 10.7336C3.43329 11.4703 3.43329 12.5298 4.03607 13.2665L11.2259 22.0541C11.626 22.5431 12.3737 22.5431 12.7738 22.0541L19.9637 13.2665C20.5664 12.5298 20.5664 11.4703 19.9637 10.7336L12.7738 1.94599C12.3737 1.45697 11.626 1.45697 11.2259 1.94599L4.03607 10.7336ZM11.9999 4.15841L18.4157 12L11.9999 19.8417L5.58398 12L11.9999 4.15841Z"></path></svg>
-          </button>
-          <button class="text-control-btn" id="marker-style-square" title="Square markers">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M4 3H20C20.5523 3 21 3.44772 21 4V20C21 20.5523 20.5523 21 20 21H4C3.44772 21 3 20.5523 3 20V4C3 3.44772 3.44772 3 4 3ZM5 5V19H19V5H5Z"></path></svg>
-          </button>
-          <input type="range" id="marker-size-slider" class="text-slider" min="0" max="15" value="5">
-          <button class="text-control-btn" id="marker-visibility-toggle" title="Toggle marker visibility">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12.0003 3C17.3924 3 21.8784 6.87976 22.8189 12C21.8784 17.1202 17.3924 21 12.0003 21C6.60812 21 2.12215 17.1202 1.18164 12C2.12215 6.87976 6.60812 3 12.0003 3ZM12.0003 19C16.2359 19 19.8603 16.052 20.7777 12C19.8603 7.94803 16.2359 5 12.0003 5C7.7646 5 4.14022 7.94803 3.22278 12C4.14022 16.052 7.7646 19 12.0003 19ZM12.0003 16.5C9.51498 16.5 7.50026 14.4853 7.50026 12C7.50026 9.51472 9.51498 7.5 12.0003 7.5C14.4855 7.5 16.5003 9.51472 16.5003 12C16.5003 14.4853 14.4855 16.5 12.0003 16.5ZM12.0003 14.5C13.381 14.5 14.5003 13.3807 14.5003 12C14.5003 10.6193 13.381 9.5 12.0003 9.5C10.6196 9.5 9.50026 10.6193 9.50026 12C9.50026 13.3807 10.6196 14.5 12.0003 14.5Z"></path></svg>
-          </button>
-        </div>
       `;
 
             // Add Apply button listener
             document.getElementById('apply-csv-btn').addEventListener('click', updateDataFromCSV);
-
-            // Add event listeners for marker controls
-            document.getElementById('marker-visibility-toggle').addEventListener('click', toggleMarkerVisibility);
-
-            document.getElementById('marker-style-circle').addEventListener('click', () => setMarkerStyle('circle'));
-            document.getElementById('marker-style-diamond').addEventListener('click', () => setMarkerStyle('rectRot'));
-            document.getElementById('marker-style-square').addEventListener('click', () => setMarkerStyle('rect'));
-
-            document.getElementById('marker-size-slider').addEventListener('input', (e) => {
-                state.lineMarkerSize = parseInt(e.target.value, 10);
-                renderChart();
-            });
-
-            // Initial state for marker controls
-            const markerControls = ['marker-style-circle', 'marker-style-diamond', 'marker-style-square', 'marker-size-slider'];
-            if (!state.lineMarkerVisible) {
-                markerControls.forEach(id => {
-                    document.getElementById(id).disabled = true;
-                });
-            }
         }
     } else {
         container.innerHTML = `
@@ -1283,6 +1248,22 @@ function initStyleControls() {
         </button>
         <input type="range" id="smoothing-slider" class="text-slider" min="0" max="5" value="${state.lineTension * 10}">
       </div>
+      <div style="border-top: 1px solid #e0e0e0; margin: var(--spacing-md) 0; padding-top: var(--spacing-md);"></div>
+      <div class="text-controls">
+        <button class="text-control-btn active" id="marker-style-circle" title="Circle markers">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12C22 17.5228 17.5228 22 12 22ZM12 20C16.4183 20 20 16.4183 20 12C20 7.58172 16.4183 4 12 4C7.58172 4 4 7.58172 4 12C4 16.4183 7.58172 20 12 20Z"></path></svg>
+        </button>
+        <button class="text-control-btn" id="marker-style-diamond" title="Diamond markers">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M4.03607 10.7336C3.43329 11.4703 3.43329 12.5298 4.03607 13.2665L11.2259 22.0541C11.626 22.5431 12.3737 22.5431 12.7738 22.0541L19.9637 13.2665C20.5664 12.5298 20.5664 11.4703 19.9637 10.7336L12.7738 1.94599C12.3737 1.45697 11.626 1.45697 11.2259 1.94599L4.03607 10.7336ZM11.9999 4.15841L18.4157 12L11.9999 19.8417L5.58398 12L11.9999 4.15841Z"></path></svg>
+        </button>
+        <button class="text-control-btn" id="marker-style-square" title="Square markers">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M4 3H20C20.5523 3 21 3.44772 21 4V20C21 20.5523 20.5523 21 20 21H4C3.44772 21 3 20.5523 3 20V4C3 3.44772 3.44772 3 4 3ZM5 5V19H19V5H5Z"></path></svg>
+        </button>
+        <input type="range" id="marker-size-slider" class="text-slider" min="0" max="15" value="${state.lineMarkerSize}">
+        <button class="text-control-btn" id="marker-visibility-toggle" title="Toggle marker visibility">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12.0003 3C17.3924 3 21.8784 6.87976 22.8189 12C21.8784 17.1202 17.3924 21 12.0003 21C6.60812 21 2.12215 17.1202 1.18164 12C2.12215 6.87976 6.60812 3 12.0003 3ZM12.0003 19C16.2359 19 19.8603 16.052 20.7777 12C19.8603 7.94803 16.2359 5 12.0003 5C7.7646 5 4.14022 7.94803 3.22278 12C4.14022 16.052 7.7646 19 12.0003 19ZM12.0003 16.5C9.51498 16.5 7.50026 14.4853 7.50026 12C7.50026 9.51472 9.51498 7.5 12.0003 7.5C14.4855 7.5 16.5003 9.51472 16.5003 12C16.5003 14.4853 14.4855 16.5 12.0003 16.5ZM12.0003 14.5C13.381 14.5 14.5003 13.3807 14.5003 12C14.5003 10.6193 13.381 9.5 12.0003 9.5C10.6196 9.5 9.50026 10.6193 9.50026 12C9.50026 13.3807 10.6196 14.5 12.0003 14.5Z"></path></svg>
+        </button>
+      </div>
     `;
     } else {
         container.innerHTML = '';
@@ -1304,6 +1285,47 @@ function initStyleControls() {
         smoothingSlider.addEventListener('input', debounce(() => {
             updateSmoothing();
         }, 100));
+    }
+
+    // Add event listeners for line chart marker controls (if present)
+    if (state.currentChartType === 'line') {
+        const markerVisibilityToggle = document.getElementById('marker-visibility-toggle');
+        const markerStyleCircle = document.getElementById('marker-style-circle');
+        const markerStyleDiamond = document.getElementById('marker-style-diamond');
+        const markerStyleSquare = document.getElementById('marker-style-square');
+        const markerSizeSlider = document.getElementById('marker-size-slider');
+
+        if (markerVisibilityToggle) {
+            markerVisibilityToggle.addEventListener('click', toggleMarkerVisibility);
+        }
+
+        if (markerStyleCircle) {
+            markerStyleCircle.addEventListener('click', () => setMarkerStyle('circle'));
+        }
+
+        if (markerStyleDiamond) {
+            markerStyleDiamond.addEventListener('click', () => setMarkerStyle('rectRot'));
+        }
+
+        if (markerStyleSquare) {
+            markerStyleSquare.addEventListener('click', () => setMarkerStyle('rect'));
+        }
+
+        if (markerSizeSlider) {
+            markerSizeSlider.addEventListener('input', (e) => {
+                state.lineMarkerSize = parseInt(e.target.value, 10);
+                renderChart();
+            });
+        }
+
+        // Set initial state for marker controls based on visibility
+        const markerControls = ['marker-style-circle', 'marker-style-diamond', 'marker-style-square', 'marker-size-slider'];
+        if (!state.lineMarkerVisible) {
+            markerControls.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.disabled = true;
+            });
+        }
     }
 }
 
