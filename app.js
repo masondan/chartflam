@@ -73,7 +73,12 @@ const state = {
     pictogramIconCategories: [],
     pictogramAllIcons: [],
     chart: null,
-    isProcessing: false
+    isProcessing: false,
+    // CSV data for each chart type
+    csvDataCache: {
+        bar: '',
+        line: ''
+    }
 };
 
 // ============================================
@@ -809,6 +814,14 @@ function selectChartType(type) {
 
     // Store previous chart type
     const previousType = state.currentChartType;
+    
+    // SAVE current CSV data to cache before switching
+    if ((previousType === 'bar' || previousType === 'line') && state.chartData.labels.length > 0) {
+        const currentCsv = chartDataToCSV();
+        state.csvDataCache[previousType] = currentCsv;
+        console.log('Saved CSV cache for', previousType, ':', currentCsv);
+    }
+    
     state.currentChartType = type;
 
     // Update active state and ARIA attributes
@@ -823,24 +836,46 @@ function selectChartType(type) {
 
     // Update placeholder data based on type
     if (type === 'bar' || type === 'line') {
-        const labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May'];
-        const data = [12, 19, 15, 25, 22];
-        state.chartData.labels = labels;
-        state.chartData.datasets[0].data = data;
+        // Check if we have cached CSV data for this chart type
+        const cachedCsv = state.csvDataCache[type];
+        
+        if (cachedCsv && cachedCsv.trim()) {
+            // Restore data from cache
+            console.log('Restoring from CSV cache for', type, ':', cachedCsv);
+            const lines = cachedCsv.split('\n').filter(line => line.trim());
+            const labels = [];
+            const data = [];
+            
+            lines.forEach(line => {
+                const parts = line.split(',');
+                if (parts.length >= 2) {
+                    labels.push(parts[0].trim());
+                    data.push(parseFloat(parts[1].trim()));
+                }
+            });
+            
+            state.chartData.labels = labels;
+            state.chartData.datasets[0].data = data;
+        } else {
+            // Use placeholder data
+            const labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May'];
+            const data = [12, 19, 15, 25, 22];
+            state.chartData.labels = labels;
+            state.chartData.datasets[0].data = data;
+        }
+        
         // For bar/line charts, set the single color immediately
         if (type === 'bar') {
-            const singleColor = '#6A5ACD';
-            state.chartData.datasets[0].backgroundColor = Array(labels.length).fill(singleColor);
-            state.chartData.datasets[0].borderColor = Array(labels.length).fill(singleColor);
+            const singleColor = state.barBaseColor;
+            state.chartData.datasets[0].backgroundColor = Array(state.chartData.labels.length).fill(singleColor);
+            state.chartData.datasets[0].borderColor = Array(state.chartData.labels.length).fill(singleColor);
         } else if (type === 'line') {
             state.activeControl = 'smoothing'; // Set default active control for line style
             // Use a default color for the line itself
-            const singleColor = '#999999'; // Default grey for the line
-            state.chartData.datasets[0].backgroundColor = singleColor; // Chart.js uses this for line color
+            const singleColor = state.lineChartLineColor;
+            state.chartData.datasets[0].backgroundColor = singleColor;
             state.chartData.datasets[0].borderColor = singleColor;
-            // We will handle marker colors separately later
-            // For now, ensure the old multi-color array is replaced
-            state.chartData.datasets[0].pointBackgroundColor = Array(labels.length).fill(state.lineChartMarkerColor);
+            state.chartData.datasets[0].pointBackgroundColor = Array(state.chartData.labels.length).fill(state.lineChartMarkerColor);
         }
     } else if (type === 'pictogram') {
         state.chartData.labels = ['Completed', 'Remaining'];
@@ -1070,16 +1105,33 @@ function renderChart() {
 // DATA CONTROLS
 // Dynamically builds the data input section based on chart type
 // ============================================
+
+// Helper function to convert chart data to CSV format
+function chartDataToCSV() {
+    const labels = state.chartData.labels;
+    const data = state.chartData.datasets[0].data;
+    const csvLines = [];
+    
+    for (let i = 0; i < labels.length; i++) {
+        csvLines.push(`${labels[i]},${data[i]}`);
+    }
+    
+    return csvLines.join('\n');
+}
+
 function initDataControls() {
     const container = document.getElementById('data-content');
     if (!container) return;
 
     if (state.currentChartType === 'bar' || state.currentChartType === 'line') {
+        // Get cached CSV data for this chart type
+        const cachedCsv = state.csvDataCache[state.currentChartType] || '';
+        
         container.innerHTML = `
       <textarea id="csv-textarea" 
                 placeholder="Paste CSV data here&#10;Format: label,value&#10;Example:&#10;Jan,12&#10;Feb,19&#10;Mar,15"
                 aria-label="CSV data input"
-                maxlength="5000"></textarea>
+                maxlength="5000">${cachedCsv}</textarea>
     `;
         if (state.currentChartType === 'bar') {
             container.innerHTML += `
@@ -1158,7 +1210,16 @@ function initDataControls() {
     }
     // Re-attach listeners for dynamically created elements
     const csvTextarea = document.getElementById('csv-textarea');
-    if (csvTextarea) csvTextarea.addEventListener('input', debounce(updateDataFromCSV, 500));
+    
+    // For bar/line charts: parse on input with longer debounce to allow full paste
+    if (state.currentChartType === 'bar' || state.currentChartType === 'line') {
+        if (csvTextarea) {
+            csvTextarea.addEventListener('input', debounce(updateDataFromCSV, 800));
+        }
+    } else {
+        // For pie/donut: use debounced input as before
+        if (csvTextarea) csvTextarea.addEventListener('input', debounce(updateDataFromCSV, 500));
+    }
 
     if (state.currentChartType !== 'bar' && state.currentChartType !== 'line') {
         document.querySelectorAll('.tab-btn').forEach(btn => btn.addEventListener('click', (e) => switchDataTab(e.currentTarget.dataset.tab)));
@@ -1406,38 +1467,71 @@ function switchDataTab(tab) {
 }
 
 function updateDataFromCSV() {
-    try {
-        const csvText = document.getElementById('csv-textarea').value.trim();
-        if (!csvText) return;
+    const textarea = document.getElementById('csv-textarea');
+    if (!textarea) return;
+    
+    const csvText = textarea.value.trim();
+    if (!csvText) return; // Silently return if empty - no error needed
 
-        const lines = csvText.split('\n');
+    try {
+        const lines = csvText.split('\n').filter(line => line.trim());
         const labels = [];
         const data = [];
+        let skippedHeader = false;
 
-        lines.forEach(line => {
-            const parts = line.split(',');
+        lines.forEach((line, index) => {
+            const parts = line.split(',').map(p => p.trim());
+            
             if (parts.length >= 2) {
-                const label = parts[0].trim();
-                const value = parseFloat(parts[1].trim());
+                const label = parts[0];
+                const valueText = parts[1];
+                const value = parseFloat(valueText);
+                
+                // Auto-detect header row: if first row has non-numeric second column, skip it
+                if (index === 0 && isNaN(value)) {
+                    skippedHeader = true;
+                    console.log('Skipped header row:', line);
+                    return;
+                }
+                
+                // Add valid data rows
                 if (label && !isNaN(value)) {
                     labels.push(label);
                     data.push(value);
+                } else {
+                    console.warn('Skipped invalid row:', line);
                 }
             }
         });
 
-        if (labels.length > 0) {
-            state.chartData.labels = labels;
-            state.chartData.datasets[0].data = data;
-            ensureColorsMatchData();
-            renderChart();
-            initManualInput();
-            initDataControls();
-            initColorControls();
+        if (labels.length === 0) {
+            console.error('No valid data parsed from CSV');
+            showFeedback('No valid data found. Format: label,value', 'error');
+            return;
         }
+
+        // Successfully parsed data
+        console.log('CSV parsed successfully:', labels.length, 'rows');
+        state.chartData.labels = labels;
+        state.chartData.datasets[0].data = data;
+        ensureColorsMatchData();
+        renderChart();
+        initManualInput();
+        initColorControls();
+        
+        // Save cleaned CSV data to cache and update textarea
+        const cleanedCsv = chartDataToCSV();
+        if (state.currentChartType === 'bar' || state.currentChartType === 'line') {
+            state.csvDataCache[state.currentChartType] = cleanedCsv;
+            console.log('Updated CSV cache for', state.currentChartType);
+        }
+        
+        // Update textarea with cleaned data
+        textarea.value = cleanedCsv;
+        
     } catch (error) {
         console.error('Error parsing CSV:', error);
-        showFeedback('Error parsing CSV. Check format.', 'error');
+        showFeedback('Error parsing CSV. Format: label,value', 'error');
     }
 }
 
@@ -1628,6 +1722,27 @@ function updateSegmentColor(index, color) {
 function ensureColorsMatchData() {
     const dataLength = state.chartData.labels.length;
     const colors = ['#6A5ACD', '#FFDAB9', '#66C0B4', '#E6E6FA', '#DDA0DD', '#ADD8E6', '#FAEBD7', '#C0C0C0'];
+
+    // Line charts use single color strings, not arrays
+    if (state.currentChartType === 'line') {
+        // Ensure pointBackgroundColor is an array for markers
+        if (!Array.isArray(state.chartData.datasets[0].pointBackgroundColor)) {
+            state.chartData.datasets[0].pointBackgroundColor = Array(dataLength).fill(state.lineChartMarkerColor);
+        } else {
+            // Adjust marker colors array length
+            while (state.chartData.datasets[0].pointBackgroundColor.length < dataLength) {
+                state.chartData.datasets[0].pointBackgroundColor.push(state.lineChartMarkerColor);
+            }
+            state.chartData.datasets[0].pointBackgroundColor = state.chartData.datasets[0].pointBackgroundColor.slice(0, dataLength);
+        }
+        return;
+    }
+
+    // For pie/donut/bar charts, backgroundColor should be an array
+    if (!Array.isArray(state.chartData.datasets[0].backgroundColor)) {
+        state.chartData.datasets[0].backgroundColor = [state.chartData.datasets[0].backgroundColor];
+        state.chartData.datasets[0].borderColor = [state.chartData.datasets[0].borderColor];
+    }
 
     while (state.chartData.datasets[0].backgroundColor.length < dataLength) {
         const colorIndex = state.chartData.datasets[0].backgroundColor.length % colors.length;
