@@ -1142,14 +1142,17 @@ function initDataControls() {
           <button class="text-control-btn" id="bar-horizontal-btn" title="Horizontal bars">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3V7H3V3H12ZM16 17V21H3V17H16ZM22 10V14H3V10H22Z"></path></svg>
           </button>
+          <button class="tab-btn" id="apply-csv-btn" aria-label="Apply CSV data to chart">Apply CSV Data</button>
         </div>
       `;
 
             // Add event listeners for bar orientation buttons
             document.getElementById('bar-vertical-btn').addEventListener('click', () => setBarOrientation('vertical'));
             document.getElementById('bar-horizontal-btn').addEventListener('click', () => setBarOrientation('horizontal'));
+            document.getElementById('apply-csv-btn').addEventListener('click', updateDataFromCSV);
         } else if (state.currentChartType === 'line') {
             container.innerHTML += `
+        <button class="tab-btn" id="apply-csv-btn" style="width: 100%; margin-top: var(--spacing-sm);" aria-label="Apply CSV data to chart">Apply CSV Data</button>
         <div class="text-controls" style="margin-top: var(--spacing-sm);">
           <button class="text-control-btn active" id="marker-style-circle" title="Circle markers">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12C22 17.5228 17.5228 22 12 22ZM12 20C16.4183 20 20 16.4183 20 12C20 7.58172 16.4183 4 12 4C7.58172 4 4 7.58172 4 12C4 16.4183 7.58172 20 12 20Z"></path></svg>
@@ -1166,6 +1169,9 @@ function initDataControls() {
           </button>
         </div>
       `;
+
+            // Add Apply button listener
+            document.getElementById('apply-csv-btn').addEventListener('click', updateDataFromCSV);
 
             // Add event listeners for marker controls
             document.getElementById('marker-visibility-toggle').addEventListener('click', toggleMarkerVisibility);
@@ -1204,22 +1210,13 @@ function initDataControls() {
                   placeholder="Paste CSV data here&#10;Format: label,value&#10;Example:&#10;Category A,30&#10;Category B,50&#10;Category C,20"
                   aria-label="CSV data input"
                   maxlength="5000"></textarea>
-        <button class="btn btn-secondary" id="apply-csv-btn" aria-label="Apply CSV data to chart">Apply CSV Data</button>
+        <button class="tab-btn" id="apply-csv-btn" style="width: 100%; margin-top: var(--spacing-sm);" aria-label="Apply CSV data to chart">Apply CSV Data</button>
       </div>
     `;
     }
     // Re-attach listeners for dynamically created elements
-    const csvTextarea = document.getElementById('csv-textarea');
-    
-    // For bar/line charts: parse on input with longer debounce to allow full paste
-    if (state.currentChartType === 'bar' || state.currentChartType === 'line') {
-        if (csvTextarea) {
-            csvTextarea.addEventListener('input', debounce(updateDataFromCSV, 800));
-        }
-    } else {
-        // For pie/donut: use debounced input as before
-        if (csvTextarea) csvTextarea.addEventListener('input', debounce(updateDataFromCSV, 500));
-    }
+    // Note: CSV parsing now only happens on Apply button click (no auto-parsing)
+    // Manual input still updates automatically via validateAndUpdateManualData
 
     if (state.currentChartType !== 'bar' && state.currentChartType !== 'line') {
         document.querySelectorAll('.tab-btn').forEach(btn => btn.addEventListener('click', (e) => switchDataTab(e.currentTarget.dataset.tab)));

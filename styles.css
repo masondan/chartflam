@@ -514,8 +514,14 @@ body {
 /* Bar chart orientation controls */
 .bar-controls {
     display: flex;
-    justify-content: center;
+    align-items: center;
     gap: var(--spacing-xs);
+    margin-top: var(--spacing-sm);
+}
+
+.bar-controls .tab-btn {
+    flex: 1;
+    margin: 0;
 }
 
 /* ============================================
