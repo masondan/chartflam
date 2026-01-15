@@ -52,6 +52,11 @@ const state = {
     axisColor: '#555555',
     axisSize: 12,
     axisBold: false,
+    // Multi-series bar chart properties
+    barCount: 1, // 1, 2, or 3 series
+    barColors: ['#5422b0', '#AB0000', '#004269'], // Series colors
+    barNames: ['Series 1', 'Series 2', 'Series 3'], // Series names from CSV header
+    barChartMode: 'grouped', // 'grouped' or 'stacked'
     // New line chart properties
     lineChartLineColor: '#5422b0',
     lineChartMarkerColor: '#5422b0',
@@ -919,9 +924,18 @@ function selectChartType(type) {
         
         // For bar/line charts, set the single color immediately
         if (type === 'bar') {
-            const singleColor = state.barBaseColor;
-            state.chartData.datasets[0].backgroundColor = Array(state.chartData.labels.length).fill(singleColor);
-            state.chartData.datasets[0].borderColor = Array(state.chartData.labels.length).fill(singleColor);
+            // Reset to single series when switching to bar chart
+            state.barCount = 1;
+            state.barNames = ['Series 1', 'Series 2', 'Series 3'];
+            const singleColor = state.barColors[0];
+            state.chartData.datasets = [{
+                data: state.chartData.datasets[0]?.data || [12, 19, 15, 25, 22],
+                backgroundColor: Array(state.chartData.labels.length).fill(singleColor),
+                borderColor: Array(state.chartData.labels.length).fill(singleColor),
+                borderWidth: 0,
+                borderRadius: state.barBorderRadius,
+                categoryPercentage: state.barCategoryPercentage
+            }];
         } else if (type === 'line') {
             state.activeControl = 'smoothing'; // Set default active control for line style
             state.lineCount = 1; // Reset to single line when switching to line chart
@@ -1072,10 +1086,12 @@ function renderChart() {
         // Set aspect ratio
         config.options.aspectRatio = state.barAspectRatio;
 
-        // Set bar styles
-        state.chartData.datasets[0].borderRadius = state.barBorderRadius;
-        state.chartData.datasets[0].categoryPercentage = state.barCategoryPercentage;
-        state.chartData.datasets[0].borderWidth = 0; // Fix for faint line artifact
+        // Apply bar styles to all datasets (single or multi-series)
+        state.chartData.datasets.forEach((dataset, index) => {
+            dataset.borderRadius = state.barBorderRadius;
+            dataset.borderWidth = 0; // Fix for faint line artifact
+            // Don't overwrite colors here - they're managed by color controls
+        });
 
         // Configure axes
         const axisOptions = {
@@ -1091,13 +1107,37 @@ function renderChart() {
                 }
             }
         };
-        config.options.scales = {
-            x: { ...axisOptions },
-            y: { ...axisOptions }
-        };
+        
+        // Configure stacked mode for multi-series
+        if (state.barCount > 1 && state.barChartMode === 'stacked') {
+            config.options.scales = {
+                x: { ...axisOptions, stacked: true },
+                y: { ...axisOptions, stacked: true }
+            };
+        } else {
+            config.options.scales = {
+                x: { ...axisOptions },
+                y: { ...axisOptions }
+            };
+        }
 
-        // Hide legend by default for bar charts
-        config.options.plugins.legend.display = false;
+        // Show legend for multi-series bar charts
+        if (state.barCount > 1) {
+            config.options.plugins.legend.display = state.legendVisible;
+            config.options.plugins.legend.labels = {
+                padding: 15,
+                font: {
+                    size: state.legendSize,
+                    family: "'Inter', sans-serif"
+                },
+                color: state.legendColor,
+                usePointStyle: true,
+                pointStyle: 'rect'
+            };
+        } else {
+            // Hide legend for single-series bar charts
+            config.options.plugins.legend.display = false;
+        }
     } else if (state.currentChartType === 'line') {
         // Set aspect ratio to square
         config.options.aspectRatio = state.barAspectRatio; // Re-use bar aspect ratio state
@@ -1201,8 +1241,23 @@ function chartDataToCSV() {
         for (let i = 0; i < labels.length; i++) {
             csvLines.push(`${labels[i]},${data1[i]},${data2[i]}`);
         }
+    } else if (state.currentChartType === 'bar' && state.barCount > 1) {
+        // Handle multi-series bar charts
+        const headerParts = ['Category'];
+        for (let s = 0; s < state.barCount; s++) {
+            headerParts.push(state.barNames[s]);
+        }
+        csvLines.push(headerParts.join(','));
+        
+        for (let i = 0; i < labels.length; i++) {
+            const rowParts = [labels[i]];
+            for (let s = 0; s < state.barCount; s++) {
+                rowParts.push(state.chartData.datasets[s].data[i]);
+            }
+            csvLines.push(rowParts.join(','));
+        }
     } else {
-        // Single dataset (bar, pie, donut, single-line)
+        // Single dataset (single-series bar, pie, donut, single-line)
         const data = state.chartData.datasets[0].data;
         for (let i = 0; i < labels.length; i++) {
             csvLines.push(`${labels[i]},${data[i]}`);
@@ -1223,7 +1278,7 @@ function initDataControls() {
         // Different placeholder text for bar vs line charts
         const placeholder = state.currentChartType === 'line' 
             ? "Paste CSV data here&#10;One line: label,value&#10;Two lines: label,value,value"
-            : "Paste CSV data here&#10;Format: label,value&#10;Example:&#10;Jan,12&#10;Feb,19&#10;Mar,15";
+            : "Paste CSV data with header row&#10;Category,Series&#10;label,value&#10;Include up to three series&#10;label,value,value,value";
         
         container.innerHTML = `
       <textarea id="csv-textarea" 
@@ -1232,13 +1287,25 @@ function initDataControls() {
                 maxlength="5000">${cachedCsv}</textarea>
     `;
         if (state.currentChartType === 'bar') {
+            const isMultiSeries = state.barCount > 1;
+            const groupedActive = state.barChartMode === 'grouped' ? 'active' : '';
+            const stackedActive = state.barChartMode === 'stacked' ? 'active' : '';
+            const disabledClass = isMultiSeries ? '' : 'disabled';
+            
             container.innerHTML += `
         <div class="bar-controls">
-          <button class="text-control-btn active" id="bar-vertical-btn" title="Vertical bars">
+          <button class="text-control-btn ${state.barOrientation === 'vertical' ? 'active' : ''}" id="bar-vertical-btn" title="Vertical bars">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M3 12H7V21H3V12ZM17 8H21V21H17V8ZM10 2H14V21H10V2Z"></path></svg>
           </button>
-          <button class="text-control-btn" id="bar-horizontal-btn" title="Horizontal bars">
+          <button class="text-control-btn ${state.barOrientation === 'horizontal' ? 'active' : ''}" id="bar-horizontal-btn" title="Horizontal bars">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3V7H3V3H12ZM16 17V21H3V17H16ZM22 10V14H3V10H22Z"></path></svg>
+          </button>
+          <span class="bar-controls-separator"></span>
+          <button class="text-control-btn ${groupedActive} ${disabledClass}" id="bar-grouped-btn" title="Grouped bars" ${isMultiSeries ? '' : 'disabled'}>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M2 12H4V21H2V12ZM5 14H7V21H5V14ZM16 8H18V21H16V8ZM19 10H21V21H19V10ZM9 2H11V21H9V2ZM12 4H14V21H12V4Z"></path></svg>
+          </button>
+          <button class="text-control-btn ${stackedActive} ${disabledClass}" id="bar-stacked-btn" title="Stacked bars" ${isMultiSeries ? '' : 'disabled'}>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M8 21H3V13H8V21ZM14.5 21H9.5V15H14.5V21ZM21 21H16V17H21V21ZM14.5 14H9.5V3H14.5V14ZM21 16H16V8H21V16ZM8 12H3V8H8V12Z"></path></svg>
           </button>
           <button class="tab-btn" id="apply-csv-btn" aria-label="Apply CSV data to chart">Apply CSV Data</button>
         </div>
@@ -1247,6 +1314,8 @@ function initDataControls() {
             // Add event listeners for bar orientation buttons
             document.getElementById('bar-vertical-btn').addEventListener('click', () => setBarOrientation('vertical'));
             document.getElementById('bar-horizontal-btn').addEventListener('click', () => setBarOrientation('horizontal'));
+            document.getElementById('bar-grouped-btn').addEventListener('click', () => setBarChartMode('grouped'));
+            document.getElementById('bar-stacked-btn').addEventListener('click', () => setBarChartMode('stacked'));
             document.getElementById('apply-csv-btn').addEventListener('click', updateDataFromCSV);
         } else if (state.currentChartType === 'line') {
             container.innerHTML += `
@@ -1592,9 +1661,17 @@ function updateDataFromCSV() {
         // Reset to default data when CSV is empty
         if (state.currentChartType === 'bar') {
             state.chartData.labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May'];
-            state.chartData.datasets[0].data = [12, 19, 15, 25, 22];
-            state.chartData.datasets[0].backgroundColor = Array(5).fill(state.barBaseColor);
-            state.chartData.datasets[0].borderColor = Array(5).fill(state.barBaseColor);
+            state.chartData.datasets = [{
+                data: [12, 19, 15, 25, 22],
+                backgroundColor: Array(5).fill(state.barColors[0]),
+                borderColor: Array(5).fill(state.barColors[0]),
+                borderWidth: 0,
+                borderRadius: state.barBorderRadius,
+                categoryPercentage: state.barCategoryPercentage
+            }];
+            state.barCount = 1;
+            state.barNames = ['Series 1', 'Series 2', 'Series 3'];
+            initDataControls(); // Refresh to update grouped/stacked button states
         } else if (state.currentChartType === 'line') {
             state.chartData.labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May'];
             state.chartData.datasets = [{
@@ -1619,19 +1696,23 @@ function updateDataFromCSV() {
     try {
         const lines = csvText.split('\n').filter(line => line.trim());
         
+        // Detect column count from first data row
+        const firstLine = lines[0].split(',').map(p => p.trim());
+        const columnCount = firstLine.length;
+        
         // For line charts, detect if multi-line format (3+ columns)
-        if (state.currentChartType === 'line') {
-            const firstLine = lines[0].split(',').map(p => p.trim());
-            const columnCount = firstLine.length;
-            
-            if (columnCount >= 3) {
-                // Multi-line chart parsing
-                parseMultiLineCSV(lines, textarea);
-                return;
-            }
+        if (state.currentChartType === 'line' && columnCount >= 3) {
+            parseMultiLineCSV(lines, textarea);
+            return;
         }
         
-        // Single-line/bar chart parsing (existing logic)
+        // For bar charts, detect if multi-series format (3+ columns)
+        if (state.currentChartType === 'bar' && columnCount >= 3) {
+            parseMultiSeriesBarCSV(lines, textarea);
+            return;
+        }
+        
+        // Single-series parsing (existing logic)
         const labels = [];
         const data = [];
 
@@ -1670,10 +1751,18 @@ function updateDataFromCSV() {
         state.chartData.labels = labels;
         
         if (state.currentChartType === 'bar') {
-            // Bar chart: update existing dataset structure
-            state.chartData.datasets[0].data = data;
-            state.chartData.datasets[0].backgroundColor = Array(labels.length).fill(state.barBaseColor);
-            state.chartData.datasets[0].borderColor = Array(labels.length).fill(state.barBaseColor);
+            // Single-series bar chart: create fresh dataset and reset to single series
+            state.chartData.datasets = [{
+                data: data,
+                backgroundColor: Array(labels.length).fill(state.barColors[0]),
+                borderColor: Array(labels.length).fill(state.barColors[0]),
+                borderWidth: 0,
+                borderRadius: state.barBorderRadius,
+                categoryPercentage: state.barCategoryPercentage
+            }];
+            state.barCount = 1;
+            state.barNames = ['Series 1', 'Series 2', 'Series 3'];
+            initDataControls(); // Refresh to update grouped/stacked button states
         } else if (state.currentChartType === 'line') {
             // Line chart: create fresh dataset
             state.chartData.datasets = [{
@@ -1791,6 +1880,91 @@ function parseMultiLineCSV(lines, textarea) {
     textarea.value = cleanedCsv;
 }
 
+function parseMultiSeriesBarCSV(lines, textarea) {
+    const labels = [];
+    const seriesData = [[], [], []]; // Up to 3 series
+    let seriesNames = ['Series 1', 'Series 2', 'Series 3'];
+    let seriesCount = 2; // Default to 2 series
+    
+    lines.forEach((line, index) => {
+        const parts = line.split(',').map(p => p.trim());
+        
+        if (parts.length >= 3) {
+            const label = parts[0];
+            const value1 = parseFloat(parts[1]);
+            const value2 = parseFloat(parts[2]);
+            const value3 = parts.length >= 4 ? parseFloat(parts[3]) : NaN;
+            
+            // Auto-detect header row: if first row has non-numeric columns, use as series names
+            if (index === 0 && (isNaN(value1) || isNaN(value2))) {
+                seriesNames[0] = parts[1];
+                seriesNames[1] = parts[2];
+                if (parts.length >= 4 && parts[3]) {
+                    seriesNames[2] = parts[3];
+                    seriesCount = 3;
+                }
+                console.log('Using header row for series names:', seriesNames);
+                return;
+            }
+            
+            // Detect series count from data rows
+            if (!isNaN(value3) && parts.length >= 4) {
+                seriesCount = 3;
+            }
+            
+            // Add valid data rows
+            if (label && !isNaN(value1) && !isNaN(value2)) {
+                labels.push(label);
+                seriesData[0].push(value1);
+                seriesData[1].push(value2);
+                if (!isNaN(value3)) {
+                    seriesData[2].push(value3);
+                }
+            } else {
+                console.warn('Skipped invalid row:', line);
+            }
+        }
+    });
+    
+    if (labels.length === 0) {
+        console.error('No valid data parsed from multi-series bar CSV');
+        showFeedback('No valid data found. Format: label,value,value', 'error');
+        return;
+    }
+    
+    // Successfully parsed multi-series data
+    console.log('Multi-series bar CSV parsed successfully:', labels.length, 'rows,', seriesCount, 'series');
+    state.chartData.labels = labels;
+    state.barCount = seriesCount;
+    state.barNames = seriesNames;
+    
+    // Create datasets for each series with color arrays (for per-category coloring)
+    state.chartData.datasets = [];
+    for (let i = 0; i < seriesCount; i++) {
+        state.chartData.datasets.push({
+            label: seriesNames[i],
+            data: seriesData[i],
+            backgroundColor: Array(labels.length).fill(state.barColors[i]),
+            borderColor: Array(labels.length).fill(state.barColors[i]),
+            borderWidth: 0,
+            borderRadius: state.barBorderRadius
+        });
+    }
+    
+    // Auto-enable legend for multi-series
+    state.legendVisible = true;
+    
+    ensureColorsMatchData();
+    renderChart();
+    initDataControls(); // Refresh to enable grouped/stacked buttons
+    initColorControls();
+    
+    // Save cleaned CSV data to cache
+    const cleanedCsv = chartDataToCSV();
+    state.csvDataCache.bar = cleanedCsv;
+    textarea.value = cleanedCsv;
+}
+
 // ============================================
 // COLOR CONTROLS
 // ============================================
@@ -1883,63 +2057,88 @@ function initColorControls() {
             });
         }
     } else if (state.currentChartType === 'bar') {
-        // Bar chart: Base color + individual bars with reset buttons
+        // Bar chart: Base color row + individual category rows with series color pickers
 
-        // Add base color control
-        const baseControl = document.createElement('div');
-        baseControl.className = 'color-control';
-        baseControl.innerHTML = `
-      <span class="color-label" style="font-weight: 600;">Base Colour</span>
-      <input type="text" class="color-picker" data-coloris id="bar-base-color-picker" value="${state.barBaseColor}">
-    `;
-        container.appendChild(baseControl);
+        // Build base color control with series color pickers
+        let baseColorHtml = `<div class="color-control"><span class="color-label" style="font-weight: 600;">Base Colour</span><div class="bar-series-color-pickers">`;
+        for (let i = 0; i < state.barCount; i++) {
+            baseColorHtml += `<input type="text" class="color-picker" data-coloris id="bar-base-color-${i}" value="${state.barColors[i]}">`;
+        }
+        baseColorHtml += `</div></div>`;
+        container.innerHTML = baseColorHtml;
 
-        // Add event listener for base color
-        document.getElementById('bar-base-color-picker').addEventListener('input', (e) => {
-            state.barBaseColor = e.target.value;
-            // Apply base color to all bars
-            state.chartData.datasets[0].backgroundColor = state.chartData.datasets[0].backgroundColor.map(() => state.barBaseColor);
-            state.chartData.datasets[0].borderColor = state.chartData.datasets[0].borderColor.map(() => state.barBaseColor);
-            renderChart();
-            // Update all color pickers to reflect the new base color
-            document.querySelectorAll('.bar-color-picker').forEach(picker => {
-                picker.value = state.barBaseColor;
-                picker.style.backgroundColor = state.barBaseColor;
+        // Add event listeners for base color pickers
+        for (let i = 0; i < state.barCount; i++) {
+            document.getElementById(`bar-base-color-${i}`).addEventListener('input', (e) => {
+                state.barColors[i] = e.target.value;
+                // Apply base color to all bars in this series (always use array)
+                const numCategories = state.chartData.labels.length;
+                state.chartData.datasets[i].backgroundColor = Array(numCategories).fill(e.target.value);
+                state.chartData.datasets[i].borderColor = Array(numCategories).fill(e.target.value);
+                renderChart();
+                // Update individual row pickers for this series
+                document.querySelectorAll(`.bar-color-picker-series-${i}`).forEach(picker => {
+                    picker.value = e.target.value;
+                    picker.style.backgroundColor = e.target.value;
+                });
             });
-        });
+        }
 
-        // Add individual bar colors with reset buttons
-        state.chartData.labels.forEach((label, index) => {
+        // Add individual category rows with reset button and series color pickers
+        state.chartData.labels.forEach((label, categoryIndex) => {
             const control = document.createElement('div');
             control.className = 'color-control';
+
+            let colorPickersHtml = '';
+            for (let seriesIndex = 0; seriesIndex < state.barCount; seriesIndex++) {
+                // Always read from the color array for each dataset
+                const bgColor = state.chartData.datasets[seriesIndex].backgroundColor;
+                const currentColor = Array.isArray(bgColor) ? bgColor[categoryIndex] : bgColor;
+                colorPickersHtml += `<input type="text" class="color-picker bar-color-picker bar-color-picker-series-${seriesIndex}" data-coloris value="${currentColor}" data-category="${categoryIndex}" data-series="${seriesIndex}">`;
+            }
 
             control.innerHTML = `
         <span class="color-label">${label}</span>
         <div class="bar-color-controls">
-          <button class="bar-reset-btn" data-index="${index}" title="Reset to base colour" aria-label="Reset ${label} to base colour">
+          <button class="bar-reset-btn" data-category="${categoryIndex}" title="Reset to base colours" aria-label="Reset ${label} to base colours">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="18" height="18">
               <path d="M5.46257 4.43262C7.21556 2.91688 9.5007 2 12 2C17.5228 2 22 6.47715 22 12C22 14.1361 21.3302 16.1158 20.1892 17.7406L17 12H20C20 7.58172 16.4183 4 12 4C9.84982 4 7.89777 4.84827 6.46023 6.22842L5.46257 4.43262ZM18.5374 19.5674C16.7844 21.0831 14.4993 22 12 22C6.47715 22 2 17.5228 2 12C2 9.86386 2.66979 7.88416 3.8108 6.25944L7 12H4C4 16.4183 7.58172 20 12 20C14.1502 20 16.1022 19.1517 17.5398 17.7716L18.5374 19.5674Z"></path>
             </svg>
           </button>
-          <input type="text" class="color-picker bar-color-picker" data-coloris value="${state.chartData.datasets[0].backgroundColor[index]}" data-index="${index}">
+          <div class="bar-series-color-pickers">${colorPickersHtml}</div>
         </div>
       `;
 
             container.appendChild(control);
 
-            // Add event listener for individual color picker
-            const colorPicker = control.querySelector('.color-picker');
-            colorPicker.addEventListener('input', (e) => {
-                updateSegmentColor(index, e.target.value);
+            // Add event listeners for individual color pickers
+            control.querySelectorAll('.bar-color-picker').forEach(picker => {
+                picker.addEventListener('input', (e) => {
+                    const catIdx = parseInt(e.target.dataset.category);
+                    const serIdx = parseInt(e.target.dataset.series);
+                    // Update the specific bar color in the array
+                    if (Array.isArray(state.chartData.datasets[serIdx].backgroundColor)) {
+                        state.chartData.datasets[serIdx].backgroundColor[catIdx] = e.target.value;
+                        state.chartData.datasets[serIdx].borderColor[catIdx] = e.target.value;
+                    }
+                    renderChart();
+                });
             });
 
             // Add event listener for reset button
             const resetBtn = control.querySelector('.bar-reset-btn');
             resetBtn.addEventListener('click', () => {
-                state.chartData.datasets[0].backgroundColor[index] = state.barBaseColor;
-                state.chartData.datasets[0].borderColor[index] = state.barBaseColor;
-                colorPicker.value = state.barBaseColor;
-                colorPicker.style.backgroundColor = state.barBaseColor;
+                const catIdx = parseInt(resetBtn.dataset.category);
+                control.querySelectorAll('.bar-color-picker').forEach((picker, serIdx) => {
+                    const baseColor = state.barColors[serIdx];
+                    picker.value = baseColor;
+                    picker.style.backgroundColor = baseColor;
+                    // Reset this category's color in the array for this series
+                    if (Array.isArray(state.chartData.datasets[serIdx].backgroundColor)) {
+                        state.chartData.datasets[serIdx].backgroundColor[catIdx] = baseColor;
+                        state.chartData.datasets[serIdx].borderColor[catIdx] = baseColor;
+                    }
+                });
                 renderChart();
             });
         });
@@ -2233,6 +2432,24 @@ function setBarOrientation(orientation) {
     } else {
         horizontalBtn.classList.add('active');
         verticalBtn.classList.remove('active');
+    }
+    renderChart();
+}
+
+function setBarChartMode(mode) {
+    if (state.barChartMode === mode || state.barCount <= 1) return;
+
+    state.barChartMode = mode;
+
+    const groupedBtn = document.getElementById('bar-grouped-btn');
+    const stackedBtn = document.getElementById('bar-stacked-btn');
+
+    if (mode === 'grouped') {
+        groupedBtn.classList.add('active');
+        stackedBtn.classList.remove('active');
+    } else {
+        stackedBtn.classList.add('active');
+        groupedBtn.classList.remove('active');
     }
     renderChart();
 }
