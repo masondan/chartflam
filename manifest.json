@@ -4,8 +4,8 @@
   "description": "Free mobile-first web app for content creators to create simple charts for social media.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#e6e2ff",
-  "theme_color": "#6A5ACD",
+  "background_color": "#5422b0",
+  "theme_color": "#5422b0",
   "icons": [
     {
       "src": "public/chartflam-icon-192.png",
