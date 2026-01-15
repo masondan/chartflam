@@ -68,8 +68,8 @@ body {
 }
 
 /* ============================================
-   SPLASH SCREEN
-   ============================================ */
+    SPLASH SCREEN
+    ============================================ */
 .splash {
     display: flex;
     flex-direction: column;
@@ -80,6 +80,14 @@ body {
     color: var(--white);
     text-align: center;
     padding: var(--spacing-xl);
+}
+
+/* Desktop: constrain splash screen to app container width */
+@media (min-width: 481px) {
+    .splash {
+        max-width: 480px;
+        margin: 0 auto;
+    }
 }
 
 .splash img {
