@@ -1068,7 +1068,11 @@ function renderChart() {
         };
         config.options.scales = {
             x: { ...axisOptions, grid: { display: false } }, // No vertical grid lines
-            y: { ...axisOptions, grid: { display: true, color: '#e0e0e0' } } // Horizontal grid lines
+            y: {
+                ...axisOptions,
+                grid: { display: true, color: '#e0e0e0' }, // Horizontal grid lines
+                beginAtZero: true // Ensure Y-axis always starts at zero for accurate data representation
+            }
         };
 
         // Hide legend by default for line charts
