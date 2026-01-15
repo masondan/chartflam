@@ -53,13 +53,18 @@ const state = {
     axisSize: 12,
     axisBold: false,
     // New line chart properties
-    lineChartLineColor: '#999999',
-    lineChartMarkerColor: '#555555',
+    lineChartLineColor: '#5422b0',
+    lineChartMarkerColor: '#5422b0',
     lineMarkerVisible: true,
     lineMarkerStyle: 'circle',
     lineMarkerSize: 5,
     lineTension: 0,
     lineWidth: 3,
+    // Multi-line chart properties
+    lineCount: 1,
+    lineColors: ['#5422b0', '#AB0000'],
+    markerColors: ['#5422b0', '#AB0000'],
+    lineNames: ['Line 1', 'Line 2'],
     // Pictogram properties
     pictogramTotal: 10, // Fixed at 10 icons (2 rows x 5 icons)
     pictogramFilled: 6.7,
@@ -843,25 +848,73 @@ function selectChartType(type) {
             // Restore data from cache
             console.log('Restoring from CSV cache for', type, ':', cachedCsv);
             const lines = cachedCsv.split('\n').filter(line => line.trim());
-            const labels = [];
-            const data = [];
             
-            lines.forEach(line => {
-                const parts = line.split(',');
-                if (parts.length >= 2) {
-                    labels.push(parts[0].trim());
-                    data.push(parseFloat(parts[1].trim()));
+            // For line charts, check if cached data is multi-line
+            if (type === 'line') {
+                const firstLine = lines[0].split(',');
+                if (firstLine.length >= 3) {
+                    // Multi-line data - will be parsed by updateDataFromCSV
+                    // For now just set placeholder, actual parsing happens in initDataControls
+                    state.chartData.labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May'];
+                    state.chartData.datasets = [{
+                        data: [12, 19, 15, 25, 22],
+                        backgroundColor: 'transparent',
+                        borderColor: state.lineColors[0],
+                        borderWidth: state.lineWidth
+                    }];
+                } else {
+                    // Single-line cached data
+                    const labels = [];
+                    const data = [];
+                    lines.forEach(line => {
+                        const parts = line.split(',');
+                        if (parts.length >= 2) {
+                            const value = parseFloat(parts[1].trim());
+                            if (!isNaN(value)) {
+                                labels.push(parts[0].trim());
+                                data.push(value);
+                            }
+                        }
+                    });
+                    if (labels.length > 0) {
+                        state.chartData.labels = labels;
+                        state.chartData.datasets = [{
+                            data: data,
+                            backgroundColor: 'transparent',
+                            borderColor: state.lineColors[0],
+                            borderWidth: state.lineWidth
+                        }];
+                    }
                 }
-            });
-            
-            state.chartData.labels = labels;
-            state.chartData.datasets[0].data = data;
+            } else {
+                // Bar chart - parse as before
+                const labels = [];
+                const data = [];
+                lines.forEach(line => {
+                    const parts = line.split(',');
+                    if (parts.length >= 2) {
+                        labels.push(parts[0].trim());
+                        data.push(parseFloat(parts[1].trim()));
+                    }
+                });
+                state.chartData.labels = labels;
+                state.chartData.datasets[0].data = data;
+            }
         } else {
             // Use placeholder data
             const labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May'];
             const data = [12, 19, 15, 25, 22];
             state.chartData.labels = labels;
-            state.chartData.datasets[0].data = data;
+            if (type === 'line') {
+                state.chartData.datasets = [{
+                    data: data,
+                    backgroundColor: 'transparent',
+                    borderColor: state.lineColors[0],
+                    borderWidth: state.lineWidth
+                }];
+            } else {
+                state.chartData.datasets[0].data = data;
+            }
         }
         
         // For bar/line charts, set the single color immediately
@@ -871,11 +924,17 @@ function selectChartType(type) {
             state.chartData.datasets[0].borderColor = Array(state.chartData.labels.length).fill(singleColor);
         } else if (type === 'line') {
             state.activeControl = 'smoothing'; // Set default active control for line style
-            // Use a default color for the line itself
-            const singleColor = state.lineChartLineColor;
-            state.chartData.datasets[0].backgroundColor = singleColor;
-            state.chartData.datasets[0].borderColor = singleColor;
-            state.chartData.datasets[0].pointBackgroundColor = Array(state.chartData.labels.length).fill(state.lineChartMarkerColor);
+            state.lineCount = 1; // Reset to single line when switching to line chart
+            state.lineNames = ['Line 1', 'Line 2'];
+            // Ensure single dataset for line chart
+            state.chartData.datasets = [{
+                data: state.chartData.datasets[0]?.data || [12, 19, 15, 25, 22],
+                backgroundColor: 'transparent',
+                borderColor: state.lineColors[0],
+                borderWidth: state.lineWidth,
+                pointBackgroundColor: state.markerColors[0],
+                pointBorderColor: state.markerColors[0]
+            }];
         }
     } else if (type === 'pictogram') {
         state.chartData.labels = ['Completed', 'Remaining'];
@@ -1043,17 +1102,19 @@ function renderChart() {
         // Set aspect ratio to square
         config.options.aspectRatio = state.barAspectRatio; // Re-use bar aspect ratio state
 
-        // Set line and marker colors from state
-        state.chartData.datasets[0].borderColor = state.lineChartLineColor;
-        state.chartData.datasets[0].pointBackgroundColor = state.lineChartMarkerColor;
-        // Set line style properties
-        state.chartData.datasets[0].tension = state.lineTension;
-        state.chartData.datasets[0].borderWidth = state.lineWidth;
-
-        state.chartData.datasets[0].pointBorderColor = state.lineChartMarkerColor;
-        state.chartData.datasets[0].pointRadius = state.lineMarkerVisible ? state.lineMarkerSize : 0;
-        state.chartData.datasets[0].pointHoverRadius = state.lineMarkerVisible ? state.lineMarkerSize + 2 : 0;
-        state.chartData.datasets[0].pointStyle = state.lineMarkerStyle;
+        // Apply styling to all datasets (single or multi-line)
+        state.chartData.datasets.forEach((dataset, index) => {
+            // Use lineColors array for multi-line support
+            dataset.borderColor = state.lineColors[index] || state.lineColors[0];
+            dataset.pointBackgroundColor = state.markerColors[index] || state.markerColors[0];
+            dataset.pointBorderColor = state.markerColors[index] || state.markerColors[0];
+            dataset.tension = state.lineTension;
+            dataset.borderWidth = state.lineWidth;
+            dataset.pointRadius = state.lineMarkerVisible ? state.lineMarkerSize : 0;
+            dataset.pointHoverRadius = state.lineMarkerVisible ? state.lineMarkerSize + 2 : 0;
+            dataset.pointStyle = state.lineMarkerStyle;
+            dataset.fill = false;
+        });
 
         // Configure axes for line chart
         const axisOptions = {
@@ -1075,8 +1136,22 @@ function renderChart() {
             }
         };
 
-        // Hide legend by default for line charts
-        config.options.plugins.legend.display = false;
+        // Auto-enable legend for multi-line charts, hide for single-line
+        if (state.lineCount === 2) {
+            config.options.plugins.legend.display = true;
+            config.options.plugins.legend.labels = {
+                padding: 15,
+                font: {
+                    size: state.legendSize,
+                    family: "'Inter', sans-serif"
+                },
+                color: state.legendColor,
+                usePointStyle: true,
+                pointStyle: 'line'
+            };
+        } else {
+            config.options.plugins.legend.display = false;
+        }
 
     }
     // Apply smoothing and gap for pie/donut charts
@@ -1113,11 +1188,25 @@ function renderChart() {
 // Helper function to convert chart data to CSV format
 function chartDataToCSV() {
     const labels = state.chartData.labels;
-    const data = state.chartData.datasets[0].data;
     const csvLines = [];
     
-    for (let i = 0; i < labels.length; i++) {
-        csvLines.push(`${labels[i]},${data[i]}`);
+    // Handle multi-line charts
+    if (state.currentChartType === 'line' && state.lineCount === 2 && state.chartData.datasets.length === 2) {
+        // Add header row with line names
+        csvLines.push(`Label,${state.lineNames[0]},${state.lineNames[1]}`);
+        
+        const data1 = state.chartData.datasets[0].data;
+        const data2 = state.chartData.datasets[1].data;
+        
+        for (let i = 0; i < labels.length; i++) {
+            csvLines.push(`${labels[i]},${data1[i]},${data2[i]}`);
+        }
+    } else {
+        // Single dataset (bar, pie, donut, single-line)
+        const data = state.chartData.datasets[0].data;
+        for (let i = 0; i < labels.length; i++) {
+            csvLines.push(`${labels[i]},${data[i]}`);
+        }
     }
     
     return csvLines.join('\n');
@@ -1131,9 +1220,14 @@ function initDataControls() {
         // Get cached CSV data for this chart type
         const cachedCsv = state.csvDataCache[state.currentChartType] || '';
         
+        // Different placeholder text for bar vs line charts
+        const placeholder = state.currentChartType === 'line' 
+            ? "Paste CSV data here&#10;One line: label,value&#10;Two lines: label,value,value"
+            : "Paste CSV data here&#10;Format: label,value&#10;Example:&#10;Jan,12&#10;Feb,19&#10;Mar,15";
+        
         container.innerHTML = `
       <textarea id="csv-textarea" 
-                placeholder="Paste CSV data here&#10;Format: label,value&#10;Example:&#10;Jan,12&#10;Feb,19&#10;Mar,15"
+                placeholder="${placeholder}"
                 aria-label="CSV data input"
                 maxlength="5000">${cachedCsv}</textarea>
     `;
@@ -1496,9 +1590,21 @@ function updateDataFromCSV() {
     const csvText = textarea.value.trim();
     if (!csvText) {
         // Reset to default data when CSV is empty
-        if (state.currentChartType === 'bar' || state.currentChartType === 'line') {
+        if (state.currentChartType === 'bar') {
             state.chartData.labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May'];
             state.chartData.datasets[0].data = [12, 19, 15, 25, 22];
+            state.chartData.datasets[0].backgroundColor = Array(5).fill(state.barBaseColor);
+            state.chartData.datasets[0].borderColor = Array(5).fill(state.barBaseColor);
+        } else if (state.currentChartType === 'line') {
+            state.chartData.labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May'];
+            state.chartData.datasets = [{
+                data: [12, 19, 15, 25, 22],
+                backgroundColor: 'transparent',
+                borderColor: state.lineColors[0],
+                borderWidth: state.lineWidth
+            }];
+            state.lineCount = 1;
+            state.lineNames = ['Line 1', 'Line 2'];
         } else {
             state.chartData.labels = ['Category A', 'Category B', 'Category C'];
             state.chartData.datasets[0].data = [30, 50, 20];
@@ -1512,9 +1618,22 @@ function updateDataFromCSV() {
 
     try {
         const lines = csvText.split('\n').filter(line => line.trim());
+        
+        // For line charts, detect if multi-line format (3+ columns)
+        if (state.currentChartType === 'line') {
+            const firstLine = lines[0].split(',').map(p => p.trim());
+            const columnCount = firstLine.length;
+            
+            if (columnCount >= 3) {
+                // Multi-line chart parsing
+                parseMultiLineCSV(lines, textarea);
+                return;
+            }
+        }
+        
+        // Single-line/bar chart parsing (existing logic)
         const labels = [];
         const data = [];
-        let skippedHeader = false;
 
         lines.forEach((line, index) => {
             const parts = line.split(',').map(p => p.trim());
@@ -1526,7 +1645,6 @@ function updateDataFromCSV() {
                 
                 // Auto-detect header row: if first row has non-numeric second column, skip it
                 if (index === 0 && isNaN(value)) {
-                    skippedHeader = true;
                     console.log('Skipped header row:', line);
                     return;
                 }
@@ -1550,7 +1668,23 @@ function updateDataFromCSV() {
         // Successfully parsed data
         console.log('CSV parsed successfully:', labels.length, 'rows');
         state.chartData.labels = labels;
-        state.chartData.datasets[0].data = data;
+        
+        if (state.currentChartType === 'bar') {
+            // Bar chart: update existing dataset structure
+            state.chartData.datasets[0].data = data;
+            state.chartData.datasets[0].backgroundColor = Array(labels.length).fill(state.barBaseColor);
+            state.chartData.datasets[0].borderColor = Array(labels.length).fill(state.barBaseColor);
+        } else if (state.currentChartType === 'line') {
+            // Line chart: create fresh dataset
+            state.chartData.datasets = [{
+                data: data,
+                backgroundColor: 'transparent',
+                borderColor: state.lineColors[0],
+                borderWidth: state.lineWidth
+            }];
+            state.lineCount = 1;
+        }
+        
         ensureColorsMatchData();
         renderChart();
         initManualInput();
@@ -1570,6 +1704,91 @@ function updateDataFromCSV() {
         console.error('Error parsing CSV:', error);
         showFeedback('Error parsing CSV. Format: label,value', 'error');
     }
+}
+
+function parseMultiLineCSV(lines, textarea) {
+    const labels = [];
+    const data1 = [];
+    const data2 = [];
+    let lineNames = ['Line 1', 'Line 2'];
+    
+    lines.forEach((line, index) => {
+        const parts = line.split(',').map(p => p.trim());
+        
+        if (parts.length >= 3) {
+            const label = parts[0];
+            const value1 = parseFloat(parts[1]);
+            const value2 = parseFloat(parts[2]);
+            
+            // Auto-detect header row: if first row has non-numeric columns, use as line names
+            if (index === 0 && (isNaN(value1) || isNaN(value2))) {
+                lineNames = [parts[1], parts[2]];
+                console.log('Using header row for line names:', lineNames);
+                return;
+            }
+            
+            // Add valid data rows
+            if (label && !isNaN(value1) && !isNaN(value2)) {
+                labels.push(label);
+                data1.push(value1);
+                data2.push(value2);
+            } else {
+                console.warn('Skipped invalid row:', line);
+            }
+        }
+    });
+    
+    if (labels.length === 0) {
+        console.error('No valid data parsed from multi-line CSV');
+        showFeedback('No valid data found. Format: label,value,value', 'error');
+        return;
+    }
+    
+    // Successfully parsed multi-line data
+    console.log('Multi-line CSV parsed successfully:', labels.length, 'rows, 2 lines');
+    state.chartData.labels = labels;
+    state.lineCount = 2;
+    state.lineNames = lineNames;
+    
+    // Create two datasets for the two lines
+    state.chartData.datasets = [
+        {
+            label: lineNames[0],
+            data: data1,
+            borderColor: state.lineColors[0],
+            backgroundColor: 'transparent',
+            borderWidth: state.lineWidth,
+            tension: state.lineTension,
+            pointBackgroundColor: state.markerColors[0],
+            pointBorderColor: state.markerColors[0],
+            pointRadius: state.lineMarkerVisible ? state.lineMarkerSize : 0,
+            pointHoverRadius: state.lineMarkerVisible ? state.lineMarkerSize + 2 : 0,
+            pointStyle: state.lineMarkerStyle
+        },
+        {
+            label: lineNames[1],
+            data: data2,
+            borderColor: state.lineColors[1],
+            backgroundColor: 'transparent',
+            borderWidth: state.lineWidth,
+            tension: state.lineTension,
+            pointBackgroundColor: state.markerColors[1],
+            pointBorderColor: state.markerColors[1],
+            pointRadius: state.lineMarkerVisible ? state.lineMarkerSize : 0,
+            pointHoverRadius: state.lineMarkerVisible ? state.lineMarkerSize + 2 : 0,
+            pointStyle: state.lineMarkerStyle
+        }
+    ];
+    
+    ensureColorsMatchData();
+    renderChart();
+    initManualInput();
+    initColorControls();
+    
+    // Save cleaned CSV data to cache
+    const cleanedCsv = chartDataToCSV();
+    state.csvDataCache.line = cleanedCsv;
+    textarea.value = cleanedCsv;
 }
 
 // ============================================
@@ -1605,24 +1824,64 @@ function initColorControls() {
     container.innerHTML = '';
 
     if (state.currentChartType === 'line') {
-        container.innerHTML = `
-      <div class="color-control">
-        <span class="color-label">Line</span>
-        <input type="text" class="color-picker" data-coloris id="line-color-picker" value="${state.lineChartLineColor}">
-      </div>
-      <div class="color-control">
-        <span class="color-label">Markers</span>
-        <input type="text" class="color-picker" data-coloris id="marker-color-picker" value="${state.lineChartMarkerColor}">
-      </div>
-    `;
-        document.getElementById('line-color-picker').addEventListener('input', (e) => {
-            state.lineChartLineColor = e.target.value;
+        // Build dynamic color controls based on line count
+        let linesHtml = `<div class="color-control"><span class="color-label">Lines</span><div class="line-color-pickers">`;
+        let markersHtml = `<div class="color-control"><span class="color-label">Markers</span><div class="line-color-pickers">`;
+        
+        // Always show first line color picker
+        linesHtml += `<input type="text" class="color-picker" data-coloris id="line-color-picker-0" value="${state.lineColors[0]}">`;
+        markersHtml += `<input type="text" class="color-picker" data-coloris id="marker-color-picker-0" value="${state.markerColors[0]}">`;
+        
+        // Show second color picker only for multi-line
+        if (state.lineCount === 2) {
+            linesHtml += `<input type="text" class="color-picker" data-coloris id="line-color-picker-1" value="${state.lineColors[1]}">`;
+            markersHtml += `<input type="text" class="color-picker" data-coloris id="marker-color-picker-1" value="${state.markerColors[1]}">`;
+        }
+        
+        linesHtml += `</div></div>`;
+        markersHtml += `</div></div>`;
+        
+        container.innerHTML = linesHtml + markersHtml;
+        
+        // Add event listeners for line color pickers
+        document.getElementById('line-color-picker-0').addEventListener('input', (e) => {
+            state.lineColors[0] = e.target.value;
+            state.lineChartLineColor = e.target.value; // Keep legacy state in sync
+            if (state.chartData.datasets[0]) {
+                state.chartData.datasets[0].borderColor = e.target.value;
+            }
             renderChart();
         });
-        document.getElementById('marker-color-picker').addEventListener('input', (e) => {
-            state.lineChartMarkerColor = e.target.value;
+        
+        document.getElementById('marker-color-picker-0').addEventListener('input', (e) => {
+            state.markerColors[0] = e.target.value;
+            state.lineChartMarkerColor = e.target.value; // Keep legacy state in sync
+            if (state.chartData.datasets[0]) {
+                state.chartData.datasets[0].pointBackgroundColor = e.target.value;
+                state.chartData.datasets[0].pointBorderColor = e.target.value;
+            }
             renderChart();
         });
+        
+        // Add listeners for second line if present
+        if (state.lineCount === 2) {
+            document.getElementById('line-color-picker-1').addEventListener('input', (e) => {
+                state.lineColors[1] = e.target.value;
+                if (state.chartData.datasets[1]) {
+                    state.chartData.datasets[1].borderColor = e.target.value;
+                }
+                renderChart();
+            });
+            
+            document.getElementById('marker-color-picker-1').addEventListener('input', (e) => {
+                state.markerColors[1] = e.target.value;
+                if (state.chartData.datasets[1]) {
+                    state.chartData.datasets[1].pointBackgroundColor = e.target.value;
+                    state.chartData.datasets[1].pointBorderColor = e.target.value;
+                }
+                renderChart();
+            });
+        }
     } else if (state.currentChartType === 'bar') {
         // Bar chart: Base color + individual bars with reset buttons
 
@@ -1762,16 +2021,13 @@ function ensureColorsMatchData() {
 
     // Line charts use single color strings, not arrays
     if (state.currentChartType === 'line') {
-        // Ensure pointBackgroundColor is an array for markers
-        if (!Array.isArray(state.chartData.datasets[0].pointBackgroundColor)) {
-            state.chartData.datasets[0].pointBackgroundColor = Array(dataLength).fill(state.lineChartMarkerColor);
-        } else {
-            // Adjust marker colors array length
-            while (state.chartData.datasets[0].pointBackgroundColor.length < dataLength) {
-                state.chartData.datasets[0].pointBackgroundColor.push(state.lineChartMarkerColor);
-            }
-            state.chartData.datasets[0].pointBackgroundColor = state.chartData.datasets[0].pointBackgroundColor.slice(0, dataLength);
-        }
+        // Handle both single and multi-line charts
+        state.chartData.datasets.forEach((dataset, index) => {
+            // Each line gets its own color from lineColors array
+            dataset.borderColor = state.lineColors[index] || state.lineColors[0];
+            dataset.pointBackgroundColor = state.markerColors[index] || state.markerColors[0];
+            dataset.pointBorderColor = state.markerColors[index] || state.markerColors[0];
+        });
         return;
     }
 

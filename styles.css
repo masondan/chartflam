@@ -597,6 +597,13 @@ body {
     gap: var(--spacing-xs);
 }
 
+/* Line chart color pickers grouping */
+.line-color-pickers {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
 /* Bar chart reset button */
 .bar-reset-btn {
     background: none;
