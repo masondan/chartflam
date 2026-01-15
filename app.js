@@ -1494,7 +1494,17 @@ function updateDataFromCSV() {
     if (!textarea) return;
     
     const csvText = textarea.value.trim();
-    if (!csvText) return; // Silently return if empty - no error needed
+    if (!csvText) {
+        // Reset to default data when CSV is empty
+        state.chartData.labels = ['Category A', 'Category B', 'Category C'];
+        state.chartData.datasets[0].data = [30, 50, 20];
+        ensureColorsMatchData();
+        renderChart();
+        initManualInput();
+        initColorControls();
+        showFeedback('Chart reset to default', 'info');
+        return;
+    }
 
     try {
         const lines = csvText.split('\n').filter(line => line.trim());
