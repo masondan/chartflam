@@ -1496,13 +1496,17 @@ function updateDataFromCSV() {
     const csvText = textarea.value.trim();
     if (!csvText) {
         // Reset to default data when CSV is empty
-        state.chartData.labels = ['Category A', 'Category B', 'Category C'];
-        state.chartData.datasets[0].data = [30, 50, 20];
+        if (state.currentChartType === 'bar' || state.currentChartType === 'line') {
+            state.chartData.labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May'];
+            state.chartData.datasets[0].data = [12, 19, 15, 25, 22];
+        } else {
+            state.chartData.labels = ['Category A', 'Category B', 'Category C'];
+            state.chartData.datasets[0].data = [30, 50, 20];
+        }
         ensureColorsMatchData();
         renderChart();
         initManualInput();
         initColorControls();
-        showFeedback('Chart reset to default', 'info');
         return;
     }
 
