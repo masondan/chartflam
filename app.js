@@ -2748,9 +2748,11 @@ async function downloadPictogramHighRes() {
     exportCanvas.width = exportWidth;
     exportCanvas.height = totalHeight;
 
-    // Fill background
-    ctx.fillStyle = state.chartBackgroundColor === 'transparent' ? '#FFFFFF' : state.chartBackgroundColor;
-    ctx.fillRect(0, 0, exportWidth, totalHeight);
+    // Fill background (skip for transparent to preserve PNG transparency)
+    if (state.chartBackgroundColor !== 'transparent') {
+        ctx.fillStyle = state.chartBackgroundColor;
+        ctx.fillRect(0, 0, exportWidth, totalHeight);
+    }
 
     // Track vertical position
     let yOffset = 60;
@@ -2879,9 +2881,11 @@ function downloadChart() {
     tempCanvas.width = exportWidth;
     tempCanvas.height = totalHeight;
 
-    // Fill background
-    tempCtx.fillStyle = state.chartBackgroundColor === 'transparent' ? '#FFFFFF' : state.chartBackgroundColor;
-    tempCtx.fillRect(0, 0, exportWidth, totalHeight);
+    // Fill background (skip for transparent to preserve PNG transparency)
+    if (state.chartBackgroundColor !== 'transparent') {
+        tempCtx.fillStyle = state.chartBackgroundColor;
+        tempCtx.fillRect(0, 0, exportWidth, totalHeight);
+    }
 
     // Track vertical position
     let yOffset = 60;
