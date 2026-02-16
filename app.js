@@ -3007,8 +3007,17 @@ function downloadChart() {
         yOffset += 80;
     }
 
-    // Get chart image source
+    // Get chart image source (with clean/no tooltips)
+    // Temporarily disable interaction to get clean export
+    const originalOptions = state.chart.options.plugins.tooltip.enabled;
+    state.chart.options.plugins.tooltip.enabled = false;
+    state.chart.update();
+    
     const chartImageSrc = state.chart.toBase64Image();
+    
+    // Restore original tooltip setting
+    state.chart.options.plugins.tooltip.enabled = originalOptions;
+    state.chart.update();
 
     // Draw chart
     const chartImage = new Image();
