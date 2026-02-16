@@ -15,7 +15,7 @@
     --text-primary: #111111;
     --text-secondary: #888888;
     --border-inactive: #e0e0e0;
-    --border-active: #555555;
+    --border-active: #999999;
     --favourite-active: #DC143C;
     --copy-active: #4f0388;
     --tooltip-bg: #e6e2fff2;
@@ -88,16 +88,20 @@
 }
 
 body {
-    font-family: 'Inter', sans-serif;
-    background-color: var(--white);
-    color: var(--text-dark);
-    line-height: 1.6;
-    min-height: 100vh;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-}
+     font-family: 'Inter', sans-serif;
+     background-color: var(--white);
+     color: var(--text-dark);
+     line-height: 1.6;
+     min-height: 100vh;
+     -webkit-font-smoothing: antialiased;
+     -moz-osx-font-smoothing: grayscale;
+ }
 
-/* ============================================
+ #app {
+     background-color: var(--white) !important;
+ }
+
+ /* ============================================
     SPLASH SCREEN
     ============================================ */
 .splash {
@@ -168,12 +172,13 @@ body {
    MAIN APP CONTAINER
    ============================================ */
 .app-container {
-    max-width: 480px;
-    margin: 0 auto;
-    padding: 0;
-    min-height: 100vh;
-    background-color: var(--white);
-}
+     max-width: 480px;
+     margin: 0 auto;
+     padding: 0;
+     min-height: 100vh;
+     background-color: var(--white) !important;
+     width: 100%;
+ }
 
 /* Subtle shadow for desktop to define app against browser background */
 @media (min-width: 481px) {
@@ -291,11 +296,12 @@ body {
    CONTROLS CONTAINER
    ============================================ */
 .controls-container {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-md);
-    padding: 0 var(--spacing-md) var(--spacing-md);
-}
+     display: flex;
+     flex-direction: column;
+     gap: var(--spacing-md);
+     padding: 0 var(--spacing-md) var(--spacing-md);
+     background-color: var(--white) !important;
+ }
 
 /* Control Sections (Dropdowns) */
 .control-section {
