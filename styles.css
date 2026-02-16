@@ -293,6 +293,41 @@ body {
 }
 
 /* ============================================
+   PIE/DONUT TOGGLE
+   ============================================ */
+.pie-donut-toggle {
+    display: none;
+    gap: var(--spacing-sm);
+    padding: 0 var(--spacing-md);
+    margin-bottom: var(--spacing-md);
+}
+
+.variant-btn {
+    flex: 1;
+    padding: var(--spacing-sm) var(--spacing-md);
+    border: 1px solid var(--border-inactive);
+    background-color: var(--bg-light);
+    color: var(--text-primary);
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 500;
+    border-radius: var(--radius-lg);
+    transition: all 0.2s ease;
+    font-family: 'Inter', sans-serif;
+}
+
+.variant-btn:hover {
+    background-color: var(--bg-medium);
+}
+
+.variant-btn.active {
+    background-color: #555555;
+    color: var(--white);
+    font-weight: 600;
+    border-color: #555555;
+}
+
+/* ============================================
    CONTROLS CONTAINER
    ============================================ */
 .controls-container {
@@ -875,6 +910,96 @@ body {
 
 .font-select option[value="Special Elite"] {
     font-family: 'Special Elite', cursive;
+}
+
+/* ============================================
+   CUSTOM FONT DROPDOWN
+   ============================================ */
+.custom-font-dropdown {
+    flex: 1;
+    position: relative;
+}
+
+.font-dropdown-btn {
+    width: 100%;
+    padding: var(--spacing-sm);
+    border: 1px solid var(--bg-medium);
+    border-radius: var(--radius-sm);
+    font-size: 0.95rem;
+    background: white;
+    color: var(--text-dark);
+    cursor: pointer;
+    text-align: left;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: border-color 0.2s ease;
+    position: relative;
+}
+
+.font-dropdown-btn::after {
+    content: '';
+    width: 20px;
+    height: 20px;
+    background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23555555"><path d="M12 15.0006L7.75732 10.758L9.17154 9.34375L12 12.1722L14.8284 9.34375L16.2426 10.758L12 15.0006Z"></path></svg>');
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 20px;
+    margin-left: 8px;
+    flex-shrink: 0;
+}
+
+.font-dropdown-btn:hover {
+    border-color: var(--text-medium);
+}
+
+.font-dropdown-btn:focus {
+    outline: none;
+    border-color: var(--text-medium);
+}
+
+.font-dropdown-menu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1px solid var(--bg-medium);
+    border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+    max-height: 0;
+    overflow: hidden;
+    z-index: 1000;
+    transition: max-height 0.3s ease;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.font-dropdown-menu.above {
+    top: auto;
+    bottom: 100%;
+    border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+    border-top: 1px solid var(--bg-medium);
+    border-bottom: none;
+}
+
+.font-dropdown-menu.open {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.font-option {
+    padding: 0.75rem var(--spacing-sm);
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    font-size: 0.95rem;
+    color: var(--text-dark);
+}
+
+.font-option:hover {
+    background-color: #f5f5f5;
+}
+
+.font-option:active {
+    background-color: #eeeeee;
 }
 
 .text-controls {

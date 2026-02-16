@@ -7,7 +7,7 @@
 const state = {
     currentChartType: 'pie',
     chartData: {
-        labels: ['Category A', 'Category B', 'Category C'],
+        labels: ['Slice A', 'Slice B', 'Slice C'],
         datasets: [{
             data: [30, 50, 20],
             backgroundColor: ['#6A5ACD', '#FFDAB9', '#66C0B4'],
@@ -179,6 +179,60 @@ function validateText(text, maxLength, fieldName = 'Text') {
     return { valid: true, value: text.trim() };
 }
 
+// Initialize custom font dropdown
+function initCustomFontDropdown(dropdownId, buttonId, onSelect) {
+    const dropdown = document.getElementById(dropdownId);
+    const btn = document.getElementById(buttonId);
+    const menu = dropdown.querySelector('.font-dropdown-menu');
+    const options = menu.querySelectorAll('.font-option');
+
+    // Toggle menu
+    btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const isOpen = menu.classList.contains('open');
+        closeAllFontDropdowns();
+        if (!isOpen) {
+            menu.classList.add('open');
+            // Check if there's enough space below
+            setTimeout(() => {
+                const btnRect = btn.getBoundingClientRect();
+                const menuHeight = menu.scrollHeight;
+                const spaceBelow = window.innerHeight - btnRect.bottom;
+                
+                if (spaceBelow < menuHeight + 10) {
+                    // Not enough space below, position above
+                    menu.classList.add('above');
+                } else {
+                    menu.classList.remove('above');
+                }
+            }, 0);
+        }
+    });
+
+    // Handle option selection
+    options.forEach(option => {
+        option.addEventListener('click', () => {
+            const fontValue = option.dataset.value;
+            const fontText = option.textContent;
+            btn.textContent = fontText;
+            menu.classList.remove('open');
+            onSelect(fontValue);
+        });
+    });
+
+    // Close on outside click
+    document.addEventListener('click', (e) => {
+        if (!dropdown.contains(e.target)) {
+            menu.classList.remove('open');
+        }
+    });
+}
+
+function closeAllFontDropdowns() {
+    document.querySelectorAll('.font-dropdown-menu').forEach(menu => {
+        menu.classList.remove('open');
+    });
+}
 
 // Set processing state
 function setProcessing(isProcessing) {
@@ -367,6 +421,12 @@ function startApp() {
         </div>
       </div>
 
+      <!-- Pie/Donut Toggle (Pie Chart Only) -->
+      <div class="pie-donut-toggle" id="pie-donut-toggle" role="group" aria-label="Chart variant selector">
+        <button class="variant-btn active" data-variant="pie" aria-pressed="true">Pie Chart</button>
+        <button class="variant-btn" data-variant="donut" aria-pressed="false">Donut Chart</button>
+      </div>
+
       <!-- Controls Container -->
       <div class="controls-container" role="region" aria-label="Chart controls">
         <!-- Data Input -->
@@ -416,15 +476,17 @@ function startApp() {
                      maxlength="${validation.maxTitleLength}">
               
               <div class="font-control-row">
-                <select id="title-font" class="font-select">
-                  <option value="" disabled selected>Choose Font</option>
-                  <option value="Inter">Inter (Default)</option>
-                  <option value="Alfa Slab One">Alfa Slab One</option>
-                  <option value="Lora">Lora Serif</option>
-                  <option value="Playfair Display">Playfair Display</option>
-                  <option value="Saira Condensed">Saira Condensed</option>
-                  <option value="Special Elite">Special Elite</option>
-                </select>
+                <div class="custom-font-dropdown" id="title-font-dropdown">
+                  <button class="font-dropdown-btn" id="title-font-btn">Inter (Default)</button>
+                  <div class="font-dropdown-menu">
+                    <div class="font-option" data-value="Inter" style="font-family: 'Inter', sans-serif;">Inter (Default)</div>
+                    <div class="font-option" data-value="Alfa Slab One" style="font-family: 'Alfa Slab One', cursive;">Alfa Slab One</div>
+                    <div class="font-option" data-value="Lora" style="font-family: 'Lora', serif;">Lora Serif</div>
+                    <div class="font-option" data-value="Playfair Display" style="font-family: 'Playfair Display', serif;">Playfair Display</div>
+                    <div class="font-option" data-value="Saira Condensed" style="font-family: 'Saira Condensed', sans-serif;">Saira Condensed</div>
+                    <div class="font-option" data-value="Special Elite" style="font-family: 'Special Elite', cursive;">Special Elite</div>
+                  </div>
+                </div>
                 <button class="text-control-btn" id="title-align-cycle" title="Text alignment">
                   ${getSVGIcon('textAlignment')}
                 </button>
@@ -468,15 +530,17 @@ function startApp() {
                      maxlength="${validation.maxCaptionLength}">
               
               <div class="font-control-row">
-                <select id="caption-font" class="font-select">
-                  <option value="" disabled selected>Choose Font</option>
-                  <option value="Inter">Inter (Default)</option>
-                  <option value="Alfa Slab One">Alfa Slab One</option>
-                  <option value="Lora">Lora Serif</option>
-                  <option value="Playfair Display">Playfair Display</option>
-                  <option value="Saira Condensed">Saira Condensed</option>
-                  <option value="Special Elite">Special Elite</option>
-                </select>
+                <div class="custom-font-dropdown" id="caption-font-dropdown">
+                  <button class="font-dropdown-btn" id="caption-font-btn">Inter (Default)</button>
+                  <div class="font-dropdown-menu">
+                    <div class="font-option" data-value="Inter" style="font-family: 'Inter', sans-serif;">Inter (Default)</div>
+                    <div class="font-option" data-value="Alfa Slab One" style="font-family: 'Alfa Slab One', cursive;">Alfa Slab One</div>
+                    <div class="font-option" data-value="Lora" style="font-family: 'Lora', serif;">Lora Serif</div>
+                    <div class="font-option" data-value="Playfair Display" style="font-family: 'Playfair Display', serif;">Playfair Display</div>
+                    <div class="font-option" data-value="Saira Condensed" style="font-family: 'Saira Condensed', sans-serif;">Saira Condensed</div>
+                    <div class="font-option" data-value="Special Elite" style="font-family: 'Special Elite', cursive;">Special Elite</div>
+                  </div>
+                </div>
                 <button class="text-control-btn" id="caption-align-cycle" title="Text alignment">
                   ${getSVGIcon('textAlignment')}
                 </button>
@@ -556,6 +620,16 @@ function startApp() {
         updateSmoothingVisibility();
         renderChart();
         setupDropdownBehavior();
+        
+        // Show/hide pie-donut toggle based on initial chart type
+        const pieDonutToggle = document.getElementById('pie-donut-toggle');
+        if (pieDonutToggle) {
+            if (state.currentChartType === 'pie' || state.currentChartType === 'donut') {
+                pieDonutToggle.style.display = 'flex';
+            } else {
+                pieDonutToggle.style.display = 'none';
+            }
+        }
     }, 0);
 }
 
@@ -590,6 +664,24 @@ function initEventListeners() {
         });
     });
 
+    // Pie/Donut toggle (attach listeners)
+    const pieDonutToggle = document.getElementById('pie-donut-toggle');
+    if (pieDonutToggle) {
+        const variantBtns = pieDonutToggle.querySelectorAll('.variant-btn');
+        variantBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const variant = btn.dataset.variant;
+                variantBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                btn.setAttribute('aria-pressed', 'true');
+                variantBtns.forEach(b => {
+                    if (b !== btn) b.setAttribute('aria-pressed', 'false');
+                });
+                selectChartType(variant);
+            });
+        });
+    }
+
     // Background color options
     const bgWhite = document.querySelector('.bg-option[data-bg="white"]');
     const bgTransparent = document.querySelector('.bg-option[data-bg="transparent"]');
@@ -616,8 +708,9 @@ function initEventListeners() {
         updateTitle();
     }, 300));
 
-    document.getElementById('title-font').addEventListener('change', (e) => {
-        state.titleFont = e.target.value;
+    // Custom font dropdown for Title
+    initCustomFontDropdown('title-font-dropdown', 'title-font-btn', (selectedFont) => {
+        state.titleFont = selectedFont;
         // Reset to normal weight for non-Inter fonts
         if (state.titleFont !== 'Inter') {
             state.titleBold = false;
@@ -677,8 +770,9 @@ function initEventListeners() {
         updateCaption();
     }, 300));
 
-    document.getElementById('caption-font').addEventListener('change', (e) => {
-        state.captionFont = e.target.value;
+    // Custom font dropdown for Caption
+    initCustomFontDropdown('caption-font-dropdown', 'caption-font-btn', (selectedFont) => {
+        state.captionFont = selectedFont;
         updateCaptionStyle();
     });
 
@@ -939,7 +1033,7 @@ function selectChartType(type) {
         state.chartData.labels = ['Completed', 'Remaining'];
         state.chartData.datasets[0].data = [67, 33];
     } else { // pie, donut
-        state.chartData.labels = ['Category A', 'Category B', 'Category C'];
+        state.chartData.labels = ['Slice A', 'Slice B', 'Slice C'];
         state.chartData.datasets[0].data = [30, 50, 20];
         // Reset to default colors for pie/donut
         state.chartData.datasets[0].backgroundColor = ['#6A5ACD', '#FFDAB9', '#66C0B4'];
@@ -965,6 +1059,25 @@ function selectChartType(type) {
             const width = container.clientWidth;
             canvas.width = width;
             canvas.height = width; // Reset to square aspect ratio
+        }
+    }
+
+    // Show/hide pie-donut toggle
+    const pieDonutToggle = document.getElementById('pie-donut-toggle');
+    if (pieDonutToggle) {
+        if (type === 'pie' || type === 'donut') {
+            pieDonutToggle.style.display = 'flex';
+            // Update active button based on current type
+            pieDonutToggle.querySelectorAll('.variant-btn').forEach(btn => {
+                btn.classList.remove('active');
+                btn.setAttribute('aria-pressed', 'false');
+                if (btn.dataset.variant === type) {
+                    btn.classList.add('active');
+                    btn.setAttribute('aria-pressed', 'true');
+                }
+            });
+        } else {
+            pieDonutToggle.style.display = 'none';
         }
     }
 
@@ -1324,7 +1437,7 @@ function initDataControls() {
       </div>
       <div id="csv-input" class="tab-content" role="tabpanel" aria-labelledby="csv-tab">
         <textarea id="csv-textarea" 
-                  placeholder="Paste CSV data here&#10;Format: label,value&#10;Example:&#10;Category A,30&#10;Category B,50&#10;Category C,20"
+                  placeholder="Paste CSV data here&#10;Format: label,value&#10;Example:&#10;Slice A,30&#10;Slice B,50&#10;Slice C,20"
                   aria-label="CSV data input"
                   maxlength="5000"></textarea>
         <button class="tab-btn" id="apply-csv-btn" style="width: 100%; margin-top: var(--spacing-sm);" aria-label="Apply CSV data to chart">Apply CSV Data</button>
@@ -1490,8 +1603,9 @@ function initManualInput() {
 
     container.innerHTML = '';
 
+    // Create empty rows with placeholders (use data to render chart, not as input values)
     state.chartData.labels.forEach((label, index) => {
-        addManualRow(label, state.chartData.datasets[0].data[index]);
+        addManualRow('', '');
     });
 }
 
@@ -1666,7 +1780,7 @@ function updateDataFromCSV() {
             state.lineCount = 1;
             state.lineNames = ['Line 1', 'Line 2'];
         } else {
-            state.chartData.labels = ['Category A', 'Category B', 'Category C'];
+            state.chartData.labels = ['Slice A', 'Slice B', 'Slice C'];
             state.chartData.datasets[0].data = [30, 50, 20];
         }
         ensureColorsMatchData();
