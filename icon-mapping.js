@@ -206,6 +206,45 @@ const ICON_MAPPING = {
  * @param {string} cssClass - Optional CSS class
  * @returns {string} HTML img tag
  */
+// SVG cache for inline rendering
+const SVG_CACHE = {};
+
+/**
+ * Load SVG file and cache it for inline rendering
+ * @param {string} iconKey - Key from ICON_MAPPING
+ * @returns {Promise<void>}
+ */
+async function loadSVGIcon(iconKey) {
+  if (!ICON_MAPPING[iconKey]) {
+    console.error(`Icon not found: ${iconKey}`);
+    return;
+  }
+
+  if (SVG_CACHE[iconKey]) {
+    return; // Already cached
+  }
+
+  const icon = ICON_MAPPING[iconKey];
+  try {
+    const response = await fetch(icon.path);
+    const svgContent = await response.text();
+    SVG_CACHE[iconKey] = svgContent;
+  } catch (error) {
+    console.error(`Failed to load SVG icon: ${iconKey}`, error);
+    SVG_CACHE[iconKey] = ''; // Cache empty string to avoid repeated attempts
+  }
+}
+
+/**
+ * Preload all SVG icons
+ * Call this during app initialization
+ * @returns {Promise<void>}
+ */
+async function preloadAllSVGIcons() {
+  const loadPromises = Object.keys(ICON_MAPPING).map(key => loadSVGIcon(key));
+  await Promise.all(loadPromises);
+}
+
 function getSVGIcon(iconKey, cssClass = '') {
   if (!ICON_MAPPING[iconKey]) {
     console.error(`Icon not found: ${iconKey}`);
@@ -214,6 +253,17 @@ function getSVGIcon(iconKey, cssClass = '') {
 
   const icon = ICON_MAPPING[iconKey];
   const classAttr = cssClass ? ` class="${cssClass}"` : '';
+  
+  // Return cached inline SVG if available, otherwise fallback to img tag
+  if (SVG_CACHE[iconKey]) {
+    const svgWithClass = SVG_CACHE[iconKey].replace(
+      '<svg',
+      `<svg${classAttr}`
+    );
+    return svgWithClass;
+  }
+
+  // Fallback for uncached icons
   return `<img src="${icon.path}" alt="${icon.alt}"${classAttr} aria-hidden="true">`;
 }
 

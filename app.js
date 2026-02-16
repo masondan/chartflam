@@ -233,9 +233,12 @@ function showBackgroundColorPicker(rainbowButton) {
 // ============================================
 // INITIALIZATION
 // ============================================
-function initApp() {
+async function initApp() {
      console.log('Initializing ChartFlam app');
      console.log('Chart.js loaded:', typeof Chart !== 'undefined');
+     
+     // Preload all SVG icons for inline rendering
+     await preloadAllSVGIcons();
      
      // Initialize Coloris color picker
      initColoris();
@@ -243,7 +246,7 @@ function initApp() {
      // Load pictogram icons
      loadPictogramIcons();
      startApp();
-}
+ }
 
 // Fix Coloris button to show color instead of text
 function fixColorisButton(field) {

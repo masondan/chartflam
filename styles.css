@@ -15,7 +15,7 @@
     --text-primary: #111111;
     --text-secondary: #888888;
     --border-inactive: #e0e0e0;
-    --border-active: #999999;
+    --border-active: #555555;
     --favourite-active: #DC143C;
     --copy-active: #4f0388;
     --tooltip-bg: #e6e2fff2;
@@ -26,12 +26,12 @@
     --black: #000000;
 
     /* Header & Chart Icon Colors */
-     --color-icon-default: #777777;
-     --color-icon-border: #111111;
-     --color-icon-active-bg: #5422b0;
-     --color-icon-active-text: #FFFFFF;
-     --header-height: 56px;
-     --header-bottom-border: #999999;
+    --color-icon-default: #777777;
+    --color-icon-border: #999999;
+    --color-icon-active-bg: #5422b0;
+    --color-icon-active-text: #FFFFFF;
+    --header-height: 56px;
+    --header-bottom-border: #999999;
     --control-border: #555555;
 
     /* Default Chart Color Palette - Refined & Sophisticated */
@@ -88,20 +88,16 @@
 }
 
 body {
-     font-family: 'Inter', sans-serif;
-     background-color: var(--white);
-     color: var(--text-dark);
-     line-height: 1.6;
-     min-height: 100vh;
-     -webkit-font-smoothing: antialiased;
-     -moz-osx-font-smoothing: grayscale;
- }
+    font-family: 'Inter', sans-serif;
+    background-color: var(--white);
+    color: var(--text-dark);
+    line-height: 1.6;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
 
- #app {
-     background-color: var(--white) !important;
- }
-
- /* ============================================
+/* ============================================
     SPLASH SCREEN
     ============================================ */
 .splash {
@@ -172,13 +168,12 @@ body {
    MAIN APP CONTAINER
    ============================================ */
 .app-container {
-     max-width: 480px;
-     margin: 0 auto;
-     padding: 0;
-     min-height: 100vh;
-     background-color: var(--white) !important;
-     width: 100%;
- }
+    max-width: 480px;
+    margin: 0 auto;
+    padding: 0;
+    min-height: 100vh;
+    background-color: var(--white);
+}
 
 /* Subtle shadow for desktop to define app against browser background */
 @media (min-width: 481px) {
@@ -296,21 +291,20 @@ body {
    CONTROLS CONTAINER
    ============================================ */
 .controls-container {
-     display: flex;
-     flex-direction: column;
-     gap: var(--spacing-md);
-     padding: 0 var(--spacing-md) var(--spacing-md);
-     background-color: var(--white) !important;
- }
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+    padding: 0 var(--spacing-md) var(--spacing-md);
+}
 
 /* Control Sections (Dropdowns) */
 .control-section {
-     background-color: var(--white);
-     border-radius: var(--radius-lg);
-     padding: var(--spacing-sm) var(--spacing-md);
-     border: 1px solid var(--border-inactive);
-     min-height: 48px;
- }
+    background-color: var(--white);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-sm) var(--spacing-md);
+    border: 1px solid var(--border-inactive);
+    min-height: 56px;
+}
 
 .control-section summary {
     cursor: pointer;
@@ -347,9 +341,10 @@ body {
 }
 
 .control-section[open] summary {
-     padding-bottom: var(--spacing-sm);
-     margin-bottom: var(--spacing-md);
- }
+    border-bottom: 1px solid var(--border-inactive);
+    padding-bottom: var(--spacing-md);
+    margin-bottom: var(--spacing-md);
+}
 
 .control-section[open] summary::after {
     background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23555555"><path d="M12 11.8284L9.17154 14.6569L7.75732 13.2426L12 9L16.2426 13.2426L14.8284 14.6569L12 11.8284Z"></path></svg>');
@@ -525,17 +520,17 @@ body {
 }
 
 .btn-remove {
-    background: none;
-    border: none;
-    cursor: pointer;
-    color: var(--text-light);
-    padding: var(--spacing-xs);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: color 0.2s ease;
-    flex-shrink: 0;
-}
+     background: none;
+     border: none;
+     cursor: pointer;
+     color: var(--text-secondary);
+     padding: var(--spacing-xs);
+     display: flex;
+     align-items: center;
+     justify-content: center;
+     transition: color 0.2s ease;
+     flex-shrink: 0;
+ }
 
 .btn-remove:hover {
     color: var(--favourite-active);
