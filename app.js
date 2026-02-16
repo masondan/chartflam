@@ -334,14 +334,12 @@ function startApp() {
 
     app.innerHTML = `
     <div class="app-container">
-      <!-- Chart Type Selector Container -->
-      <div class="chart-selector-container">
-        <div class="chart-selector" role="tablist" aria-label="Chart type selector">
+      <!-- Header -->
+      <header class="app-header" role="banner">
+        <img src="public/icons/logo-chartflam-logotype.png" alt="ChartFlam" class="app-logo">
+        <nav class="chart-selector" role="tablist" aria-label="Chart type selector">
           <button class="chart-icon active" data-chart="pie" title="Pie Chart" role="tab" aria-selected="true" aria-label="Pie Chart">
             ${getSVGIcon('chartPie')}
-          </button>
-          <button class="chart-icon" data-chart="donut" title="Donut Chart" role="tab" aria-selected="false" aria-label="Donut Chart">
-            ${getSVGIcon('chartDonut')}
           </button>
           <button class="chart-icon" data-chart="bar" title="Bar Chart" role="tab" aria-selected="false" aria-label="Bar Chart">
             ${getSVGIcon('chartBar')}
@@ -352,8 +350,8 @@ function startApp() {
           <button class="chart-icon" data-chart="pictogram" title="Pictogram" role="tab" aria-selected="false" aria-label="Pictogram Chart">
             ${getSVGIcon('chartPictogram')}
           </button>
-        </div>
-        </div>
+        </nav>
+      </header>
 
       <!-- Chart Display Container -->
       <div class="chart-display-container" role="region" aria-label="Chart preview">
