@@ -15,7 +15,7 @@ const state = {
             borderWidth: 1
         }]
     },
-    chartTitle: 'Sample Chart',
+    chartTitle: '',
     chartCaption: '',
     chartBackgroundColor: '#FFFFFF',
     smoothingValue: 5,
@@ -472,7 +472,7 @@ function startApp() {
                      id="title-input" 
                      class="text-input-field"
                      value="${state.chartTitle}" 
-                     placeholder="Chart Title"
+                     placeholder="Add chart title"
                      maxlength="${validation.maxTitleLength}">
               
               <div class="font-control-row">
@@ -1485,20 +1485,20 @@ function initStyleControls() {
       </div>
     `;
     } else if (state.currentChartType === 'pie' || state.currentChartType === 'donut') {
-        container.innerHTML = `
-      <div class="text-controls">
-        <button class="smooth-toggle active" data-type="corner" aria-label="Corner smoothing" title="Corner smoothing">
-          ${getSVGIcon('cornerSmoothing')}
-        </button>
-        <button class="smooth-toggle" data-type="gap" aria-label="Slice gap" title="Slice gap">
-          ${getSVGIcon('sliceGap')}
-        </button>
-        <button class="smooth-toggle" data-type="hole" id="donut-hole-toggle" aria-label="Donut hole size" title="Donut hole size">
-          ${getSVGIcon('donutHoleSize')}
-        </button>
-        <input type="range" id="smoothing-slider" class="text-slider" min="0" max="20" value="${state.smoothingValue}">
-      </div>
-    `;
+         container.innerHTML = `
+       <div class="text-controls">
+         <button class="smooth-toggle ${state.activeControl === 'corner' ? 'active' : ''}" data-type="corner" aria-label="Corner smoothing" title="Corner smoothing">
+           ${getSVGIcon('cornerSmoothing')}
+         </button>
+         <button class="smooth-toggle ${state.activeControl === 'gap' ? 'active' : ''}" data-type="gap" aria-label="Slice gap" title="Slice gap">
+           ${getSVGIcon('sliceGap')}
+         </button>
+         <button class="smooth-toggle ${state.activeControl === 'hole' ? 'active' : ''}" data-type="hole" id="donut-hole-toggle" aria-label="Donut hole size" title="Donut hole size">
+           ${getSVGIcon('donutHoleSize')}
+         </button>
+         <input type="range" id="smoothing-slider" class="text-slider" min="0" max="20" value="${state.smoothingValue}">
+       </div>
+     `;
     } else if (state.currentChartType === 'line') {
         container.innerHTML = `
       <div class="text-controls">
@@ -1603,13 +1603,13 @@ function initManualInput() {
 
     container.innerHTML = '';
 
-    // Create empty rows with placeholders (use data to render chart, not as input values)
+    // Create rows with placeholder text showing the actual data
     state.chartData.labels.forEach((label, index) => {
-        addManualRow('', '');
+        addManualRow(label, state.chartData.datasets[0].data[index], true);
     });
 }
 
-function addManualRow(label = '', value = '') {
+function addManualRow(label = '', value = '', usePlaceholder = false) {
     const container = document.getElementById('manual-rows');
     if (!container) return;
 
@@ -1619,19 +1619,25 @@ function addManualRow(label = '', value = '') {
 
     const rowId = `row-${Date.now()}`;
 
+    // If usePlaceholder is true, show data as placeholder text with empty value
+    const labelValue = usePlaceholder ? '' : label;
+    const valueLabelValue = usePlaceholder ? '' : value;
+    const labelPlaceholder = usePlaceholder ? label : 'Label';
+    const valuePlaceholder = usePlaceholder ? value : 'Value';
+
     row.innerHTML = `
     <input type="text" 
            class="row-label" 
-           placeholder="Label" 
-           value="${label}"
+           placeholder="${labelPlaceholder}" 
+           value="${labelValue}"
            maxlength="${validation.maxLabelLength}"
            aria-label="Data label"
            aria-describedby="${rowId}-hint"
            required>
     <input type="number" 
            class="row-value" 
-           placeholder="Value" 
-           value="${value}" 
+           placeholder="${valuePlaceholder}" 
+           value="${valueLabelValue}" 
            step="0.1"
            min="${validation.allowNegative ? '' : validation.minValue}"
            max="${validation.maxValue}"
