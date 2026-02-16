@@ -1,7 +1,7 @@
 {
   "name": "ChartFlam",
   "short_name": "ChartFlam",
-  "description": "Free mobile-first web app for content creators to create simple charts for social media.",
+  "description": "Mobile-first web app for creating simple charts, including pie, bar and line charts, and pictgrams.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#5422b0",
