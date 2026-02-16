@@ -26,8 +26,8 @@
     --black: #000000;
 
     /* Header & Chart Icon Colors */
-    --color-icon-default: #777777;
-    --color-icon-border: #999999;
+    --color-icon-default: #333333;
+    --color-icon-border: #5422b0;
     --color-icon-active-bg: #5422b0;
     --color-icon-active-text: #FFFFFF;
     --header-height: 56px;
@@ -85,6 +85,7 @@
     box-sizing: border-box;
     margin: 0;
     padding: 0;
+    -webkit-tap-highlight-color: transparent;
 }
 
 body {
@@ -254,7 +255,7 @@ body {
     }
 
     .app-logo {
-        height: 32px !important;
+        height: 30px !important;
     }
 
     .chart-selector {
@@ -262,16 +263,16 @@ body {
     }
 
     .chart-icon {
-        width: 34px !important;
-        height: 34px !important;
+        width: 36px !important;
+        height: 36px !important;
         border: 1px solid var(--color-icon-border) !important;
         border-radius: 50% !important;
     }
 
     .chart-icon img,
     .chart-icon svg {
-        width: 18px !important;
-        height: 18px !important;
+        width: 20px !important;
+        height: 20px !important;
     }
 }
 
