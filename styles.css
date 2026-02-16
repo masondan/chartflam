@@ -797,12 +797,13 @@ body {
 
 .text-subsection {
     margin-bottom: var(--spacing-sm);
-    padding-bottom: var(--spacing-sm);
+    padding-bottom: 0;
     border-bottom: 1px solid #e0e0e0;
 }
 
 .text-subsection:last-child {
     border-bottom: none;
+    margin-bottom: 0;
 }
 
 .text-input-field {
@@ -881,6 +882,7 @@ body {
     gap: var(--spacing-xs);
     flex-wrap: wrap;
     align-items: center;
+    margin-top: var(--spacing-md);
 }
 
 .text-control-group {

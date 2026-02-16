@@ -512,15 +512,6 @@ function startApp() {
           <summary aria-expanded="false" aria-controls="legend-content">Legend</summary>
           <div id="legend-content" class="control-content">
             <div class="legend-control-row">
-              <button class="text-control-btn" id="legend-visible-toggle" title="Show/hide legend">
-                ${getSVGIcon('visibility')}
-              </button>
-              <button class="text-control-btn ${state.legendPosition === 'bottom' ? 'active' : ''}" id="legend-position-down" title="Legend below chart">
-                ${getSVGIcon('alignBottom')}
-              </button>
-              <button class="text-control-btn ${state.legendPosition === 'top' ? 'active' : ''}" id="legend-position-up" title="Legend above chart">
-                ${getSVGIcon('alignTop')}
-              </button>
               <span class="legend-size-icon">
                 ${getSVGIcon('fontSize')}
               </span>
@@ -530,6 +521,15 @@ function startApp() {
                      min="10" 
                      max="18" 
                      value="${state.legendSize}">
+              <button class="text-control-btn ${state.legendPosition === 'bottom' ? 'active' : ''}" id="legend-position-down" title="Legend below chart">
+                ${getSVGIcon('alignBottom')}
+              </button>
+              <button class="text-control-btn ${state.legendPosition === 'top' ? 'active' : ''}" id="legend-position-up" title="Legend above chart">
+                ${getSVGIcon('alignTop')}
+              </button>
+              <button class="text-control-btn" id="legend-visible-toggle" title="Show/hide legend">
+                ${getSVGIcon('visibility')}
+              </button>
               <input type="text" id="legend-color" class="color-picker" data-coloris value="${state.legendColor}">
             </div>
           </div>
@@ -2648,19 +2648,19 @@ function initLegendAxisControls() {
         summary.textContent = 'Legend';
         container.innerHTML = `
       <div class="legend-control-row">
-        <button class="text-control-btn" id="legend-visible-toggle" title="Show/hide legend">
-          ${getSVGIcon('visibility')}
-        </button>
+        <span class="legend-size-icon">
+          ${getSVGIcon('fontSize')}
+        </span>
+        <input type="range" id="legend-size-slider" class="text-slider" min="10" max="18" value="${state.legendSize}">
         <button class="text-control-btn ${state.legendPosition === 'bottom' ? 'active' : ''}" id="legend-position-down" title="Legend below chart">
           ${getSVGIcon('alignBottom')}
         </button>
         <button class="text-control-btn ${state.legendPosition === 'top' ? 'active' : ''}" id="legend-position-up" title="Legend above chart">
           ${getSVGIcon('alignTop')}
         </button>
-        <span class="legend-size-icon">
-          ${getSVGIcon('fontSize')}
-        </span>
-        <input type="range" id="legend-size-slider" class="text-slider" min="10" max="18" value="${state.legendSize}">
+        <button class="text-control-btn" id="legend-visible-toggle" title="Show/hide legend">
+          ${getSVGIcon('visibility')}
+        </button>
         <input type="color" id="legend-color" class="color-picker" value="${state.legendColor}">
       </div>
     `;
