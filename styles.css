@@ -305,12 +305,12 @@ body {
 
 /* Control Sections (Dropdowns) */
 .control-section {
-    background-color: var(--white);
-    border-radius: var(--radius-lg);
-    padding: var(--spacing-sm) var(--spacing-md);
-    border: 1px solid var(--border-inactive);
-    min-height: 56px;
-}
+     background-color: var(--white);
+     border-radius: var(--radius-lg);
+     padding: var(--spacing-sm) var(--spacing-md);
+     border: 1px solid var(--border-inactive);
+     min-height: 48px;
+ }
 
 .control-section summary {
     cursor: pointer;
@@ -347,10 +347,9 @@ body {
 }
 
 .control-section[open] summary {
-    border-bottom: 1px solid var(--border-inactive);
-    padding-bottom: var(--spacing-md);
-    margin-bottom: var(--spacing-md);
-}
+     padding-bottom: var(--spacing-sm);
+     margin-bottom: var(--spacing-md);
+ }
 
 .control-section[open] summary::after {
     background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23555555"><path d="M12 11.8284L9.17154 14.6569L7.75732 13.2426L12 9L16.2426 13.2426L14.8284 14.6569L12 11.8284Z"></path></svg>');
