@@ -169,6 +169,11 @@ const ICON_MAPPING = {
     alt: 'Show/hide',
     usage: 'Legend and axis visibility toggle'
   },
+  noVisibility: {
+    path: 'public/icons/icon-no-visibility.svg',
+    alt: 'Hidden',
+    usage: 'Legend and axis hidden state'
+  },
   alignTop: {
     path: 'public/icons/icon-align-top.svg',
     alt: 'Legend above chart',
