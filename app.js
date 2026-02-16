@@ -915,7 +915,8 @@ function selectChartType(type) {
 
     // Update active state and ARIA attributes
     document.querySelectorAll('.chart-icon').forEach(icon => {
-        const isActive = icon.dataset.chart === type;
+        // Pie button should be active for both pie and donut charts
+        const isActive = icon.dataset.chart === type || (icon.dataset.chart === 'pie' && type === 'donut');
         icon.classList.toggle('active', isActive);
         icon.setAttribute('aria-selected', isActive);
     });
