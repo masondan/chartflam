@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <style>
+    @media (prefers-color-scheme: light) {
+      .bar { fill: #5422b0; }
+    }
+    @media (prefers-color-scheme: dark) {
+      .bar { fill: #daceff; }
+    }
+  </style>
+  <!-- Small bar -->
+  <rect class="bar" x="16" y="312" width="96" height="184" rx="20" />
+  <!-- Medium bar -->
+  <rect class="bar" x="208" y="104" width="96" height="392" rx="20" />
+  <!-- Large bar -->
+  <rect class="bar" x="400" y="184" width="96" height="312" rx="20" />
+</svg>
