@@ -162,7 +162,7 @@ body {
     background-color: var(--enter-btn);
     color: var(--text-dark);
     border: none;
-    padding: 0.5rem 1.25rem;
+    padding: var(--spacing-sm) var(--spacing-lg);
     font-size: 0.95rem;
     font-weight: 600;
     border-radius: var(--radius-md);
