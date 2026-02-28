@@ -279,7 +279,7 @@ body {
         width: 36px !important;
         height: 36px !important;
         border: 1px solid var(--color-icon-border) !important;
-        border-radius: 50% !important;
+        border-radius: var(--radius-round) !important;
     }
 
     .chart-icon img,
