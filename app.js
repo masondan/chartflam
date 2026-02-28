@@ -1410,8 +1410,8 @@ function initDataControls() {
           <button class="text-control-btn ${stackedActive} ${disabledClass}" id="bar-stacked-btn" title="Stacked bars" ${isMultiSeries ? '' : 'disabled'}>
             ${getSVGIcon('stackedBars')}
           </button>
-          <button class="tab-btn" id="apply-csv-btn" aria-label="Apply CSV data to chart">Apply CSV Data</button>
         </div>
+        <button class="tab-btn" id="apply-csv-btn" style="width: 100%; margin-top: var(--spacing-sm);" aria-label="Apply CSV data to chart">Apply CSV Data</button>
       `;
 
             // Add event listeners for bar orientation buttons
