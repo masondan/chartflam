@@ -43,7 +43,6 @@
     --color-icon-active-bg: #5422b0;
     --color-icon-active-text: #FFFFFF;
     --header-height: 56px;
-    --header-bottom-border: #999999;
     --bg-toggle-active: #555555;
 
     /* Default Chart Color Palette - Refined & Sophisticated */
@@ -210,7 +209,7 @@ body {
     align-items: center;
     padding: var(--spacing-md);
     background-color: var(--white);
-    border-bottom: 1px solid var(--header-bottom-border);
+    border-bottom: 1px solid var(--color-border-active);
     margin-bottom: var(--spacing-md);
 }
 
@@ -575,7 +574,7 @@ body {
     min-width: 0;
     /* Fix for flex item overflow on some mobile browsers */
     padding: var(--spacing-sm);
-    border: 1px solid var(--bg-medium);
+    border: 1px solid var(--color-border);
     border-radius: var(--radius-sm);
     font-size: 0.95rem;
     font-family: 'Inter', sans-serif;
@@ -585,7 +584,7 @@ body {
 
 .manual-row input:focus {
     outline: none;
-    border-color: var(--text-medium);
+    border-color: var(--color-border-active);
 }
 
 /* Remove number input spinners */
@@ -1126,7 +1125,7 @@ body {
 .input-group input[type="color"] {
     width: 100%;
     padding: var(--spacing-sm);
-    border: 1px solid var(--bg-medium);
+    border: 1px solid var(--color-border);
     border-radius: var(--radius-sm);
     font-size: 1rem;
     font-family: 'Inter', sans-serif;
@@ -1135,7 +1134,7 @@ body {
 
 .input-group input[type="text"]:focus {
     outline: none;
-    border-color: var(--copy-active);
+    border-color: var(--color-border-active);
 }
 
 .input-group input[type="color"] {
