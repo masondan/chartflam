@@ -152,8 +152,12 @@ body {
      width: 100%;
  }
 
-/* Subtle shadow for desktop to define app against browser background */
+/* Desktop background and styling */
 @media (min-width: 481px) {
+    body {
+        background-color: #efefef;
+    }
+
     .app-container {
         box-shadow: var(--shadow-md);
     }
@@ -545,7 +549,7 @@ body {
 
 .manual-row input:focus {
     outline: none;
-    border-color: var(--color-border-active);
+    border: 2px solid var(--color-border-active);
 }
 
 /* Remove number input spinners */
@@ -622,7 +626,7 @@ body {
 
 #csv-textarea:focus {
     outline: none;
-    border-color: var(--color-border-active);
+    border: 2px solid var(--color-border-active);
 }
 
 /* Bar chart orientation controls */
@@ -862,7 +866,7 @@ body {
 
 .text-input-field:focus {
     outline: none;
-    border-color: var(--color-border-active);
+    border: 2px solid var(--color-border-active);
 }
 
 .font-control-row {
@@ -891,7 +895,7 @@ body {
 
 .font-select:focus {
     outline: none;
-    border-color: var(--color-border-active);
+    border: 2px solid var(--color-border-active);
 }
 
 .font-select option {
@@ -965,7 +969,7 @@ body {
 
 .font-dropdown-btn:focus {
     outline: none;
-    border-color: var(--text-medium);
+    border: 2px solid var(--text-medium);
 }
 
 .font-dropdown-menu {
@@ -1101,7 +1105,7 @@ body {
 
 .input-group input[type="text"]:focus {
     outline: none;
-    border-color: var(--color-border-active);
+    border: 2px solid var(--color-border-active);
 }
 
 .input-group input[type="color"] {
@@ -1111,7 +1115,7 @@ body {
 
 .input-group input[type="color"]:focus {
     outline: none;
-    border-color: var(--color-border-active);
+    border: 2px solid var(--color-border-active);
 }
 
 /* Range Slider */
