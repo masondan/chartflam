@@ -85,6 +85,35 @@
     --line-height-tight: 1.2;
     --line-height-normal: 1.5;
     --line-height-relaxed: 1.8;
+
+    /* Shadows - Design System Tiers */
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.07);
+    --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+
+    /* Icon Sizes - Semantic Tiers */
+    --icon-sm: 18px;      /* Compact toggles, helpers */
+    --icon-base: 20px;    /* Standard inline, navigation */
+    --icon-lg: 32px;      /* Action buttons, CTAs */
+    --icon-xl: 36px;      /* Selectable grids, large surfaces */
+
+    /* Z-Index Layers - Stacking Order */
+    --z-dropdown: 50;           /* Dropdowns, menus */
+    --z-header: 100;            /* App header (stays above content on scroll) */
+    --z-modal-overlay: 200;     /* Semi-transparent overlay behind modal */
+    --z-modal: 210;             /* Modal dialog or slide-out drawer */
+    --z-tooltip: 220;           /* Tooltips, popovers (above modals) */
+
+    /* Transitions & Animations - Standard Durations */
+    --duration-fast: 200ms;      /* Button hover, small toggles, quick feedback */
+    --duration-normal: 300ms;    /* Modal open, panel transitions, drawer animations */
+    --duration-slow: 500ms;      /* Page transitions (for future use) */
+    --duration-spinner: 600ms;   /* Infinite loading spinners */
+
+    /* Easing Functions */
+    --ease-default: ease;
+    --ease-out: ease-out;
+    --ease-in-out: ease-in-out;
 }
 
 /* ============================================
@@ -126,7 +155,7 @@ body {
 /* Subtle shadow for desktop to define app against browser background */
 @media (min-width: 481px) {
     .app-container {
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        box-shadow: var(--shadow-md);
     }
 }
 
@@ -146,7 +175,7 @@ body {
 .app-logo {
     height: 32px;
     width: auto;
-    transition: opacity 0.2s ease;
+    transition: opacity var(--duration-fast) var(--ease-default);
 }
 
 .chart-selector {
@@ -163,7 +192,7 @@ body {
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all var(--duration-normal) var(--ease-default);
     color: var(--text-secondary);
     padding: 0;
     background-color: transparent;
@@ -187,8 +216,8 @@ body {
 }
 
 .chart-icon img {
-    width: 20px;
-    height: 20px;
+    width: var(--icon-base);
+    height: var(--icon-base);
 }
 
 /* Mobile header optimization */
@@ -215,7 +244,7 @@ body {
 
     .chart-icon img,
     .chart-icon svg {
-        width: 19px !important;
+        width: 19px !important;  /* Mobile responsive adjustment to --icon-base */
         height: 19px !important;
     }
 }
@@ -286,7 +315,7 @@ body {
     font-size: 1rem;
     font-weight: 500;
     border-radius: var(--radius-md);
-    transition: all 0.2s ease;
+    transition: all var(--duration-fast) var(--ease-default);
     font-family: 'Inter', sans-serif;
 }
 
@@ -347,7 +376,7 @@ body {
     background-size: contain;
     background-repeat: no-repeat;
     background-position: center;
-    transition: transform 0.3s ease;
+    transition: transform var(--duration-normal) var(--ease-default);
     flex-shrink: 0;
 }
 
@@ -375,7 +404,7 @@ body {
     background-color: var(--white);
     border-radius: var(--radius-lg);
     padding: var(--spacing-sm) var(--spacing-md);
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    box-shadow: var(--shadow-sm);
     display: flex;
     align-items: center;
     gap: var(--spacing-md);
@@ -397,14 +426,14 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.2s ease;
+    transition: all var(--duration-fast) var(--ease-default);
     padding: 0;
     border-radius: var(--radius-sm);
 }
 
 .smooth-toggle svg {
-    width: 20px;
-    height: 20px;
+    width: var(--icon-base);
+    height: var(--icon-base);
 }
 
 .smooth-toggle.active {
@@ -436,14 +465,14 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 20px;
-    height: 20px;
+    width: var(--icon-base);
+    height: var(--icon-base);
     color: var(--text-light);
 }
 
 .legend-size-icon svg {
-    width: 18px;
-    height: 18px;
+    width: var(--icon-sm);
+    height: var(--icon-sm);
 }
 
 /* ============================================
@@ -464,7 +493,7 @@ body {
     font-size: 1rem;
     font-weight: 500;
     border-radius: var(--radius-md);
-    transition: all 0.2s ease;
+    transition: all var(--duration-fast) var(--ease-default);
     font-family: 'Inter', sans-serif;
     color: var(--text-dark);
 }
@@ -510,7 +539,7 @@ body {
     border-radius: var(--radius-md);
     font-size: 0.95rem;
     font-family: 'Inter', sans-serif;
-    transition: border-color 0.2s ease;
+    transition: border-color var(--duration-fast) var(--ease-default);
     color: var(--text-dark);
 }
 
@@ -547,7 +576,7 @@ body {
      display: flex;
      align-items: center;
      justify-content: center;
-     transition: color 0.2s ease;
+     transition: color var(--duration-fast) var(--ease-default);
      flex-shrink: 0;
  }
 
@@ -562,15 +591,15 @@ body {
     border: none;
     cursor: pointer;
     color: var(--text-light);
-    transition: all 0.2s ease;
+    transition: all var(--duration-fast) var(--ease-default);
     display: flex;
     align-items: center;
     justify-content: center;
 }
 
 .btn-add svg {
-    width: 32px;
-    height: 32px;
+    width: var(--icon-lg);
+    height: var(--icon-lg);
 }
 
 .btn-add:hover {
@@ -661,7 +690,7 @@ body {
     border: 2px solid var(--bg-medium);
     border-radius: 50%;
     cursor: pointer;
-    transition: border-color 0.2s ease;
+    transition: border-color var(--duration-fast) var(--ease-default);
     padding: 0;
     -webkit-appearance: none;
     -moz-appearance: none;
@@ -713,7 +742,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: color 0.2s ease, transform 0.2s ease;
+    transition: color var(--duration-fast) var(--ease-default), transform var(--duration-fast) var(--ease-default);
 }
 
 .bar-reset-btn:hover {
@@ -746,7 +775,7 @@ body {
     border-radius: 50%;
     padding: 2px;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all var(--duration-fast) var(--ease-default);
 }
 
 .bg-option.active {
@@ -855,9 +884,9 @@ body {
     background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23555555"><path d="M12 15.0006L7.75732 10.758L9.17154 9.34375L12 12.1722L14.8284 9.34375L16.2426 10.758L12 15.0006Z"></path></svg>');
     background-repeat: no-repeat;
     background-position: right 8px center;
-    background-size: 20px;
+    background-size: var(--icon-base);
     padding-right: 32px;
-    transition: border-color 0.2s ease;
+    transition: border-color var(--duration-fast) var(--ease-default);
 }
 
 .font-select:focus {
@@ -914,18 +943,18 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    transition: border-color 0.2s ease;
+    transition: border-color var(--duration-fast) var(--ease-default);
     position: relative;
 }
 
 .font-dropdown-btn::after {
     content: '';
-    width: 20px;
-    height: 20px;
+    width: var(--icon-base);
+    height: var(--icon-base);
     background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23555555"><path d="M12 15.0006L7.75732 10.758L9.17154 9.34375L12 12.1722L14.8284 9.34375L16.2426 10.758L12 15.0006Z"></path></svg>');
     background-repeat: no-repeat;
     background-position: center;
-    background-size: 20px;
+    background-size: var(--icon-base);
     margin-left: 8px;
     flex-shrink: 0;
 }
@@ -949,9 +978,9 @@ body {
     border-radius: 0 0 var(--radius-sm) var(--radius-sm);
     max-height: 0;
     overflow: hidden;
-    z-index: 1000;
-    transition: max-height 0.3s ease;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    z-index: var(--z-dropdown);
+    transition: max-height var(--duration-normal) var(--ease-default);
+    box-shadow: var(--shadow-md);
 }
 
 .font-dropdown-menu.above {
@@ -970,7 +999,7 @@ body {
 .font-option {
     padding: 0.75rem var(--spacing-sm);
     cursor: pointer;
-    transition: background-color 0.2s ease;
+    transition: background-color var(--duration-fast) var(--ease-default);
     font-size: 0.95rem;
     color: var(--text-dark);
 }
@@ -1008,7 +1037,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.2s ease;
+    transition: all var(--duration-fast) var(--ease-default);
     padding: 0;
     border-radius: var(--radius-sm);
 }
@@ -1016,8 +1045,8 @@ body {
 
 
 .text-control-btn svg {
-    width: 18px;
-    height: 18px;
+    width: var(--icon-sm);
+    height: var(--icon-sm);
 }
 
 .text-control-btn.active {
@@ -1067,8 +1096,8 @@ body {
     border-radius: var(--radius-md);
     font-size: 1rem;
     font-family: 'Inter', sans-serif;
-    transition: border-color 0.2s ease;
-}
+    transition: border-color var(--duration-fast) var(--ease-default);
+    }
 
 .input-group input[type="text"]:focus {
     outline: none;
@@ -1104,7 +1133,7 @@ input[type="range"]::-webkit-slider-thumb {
     border-radius: 50%;
     background: var(--bg-toggle-active);
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all var(--duration-fast) var(--ease-default);
 }
 
 input[type="range"]::-webkit-slider-thumb:hover {
@@ -1118,7 +1147,7 @@ input[type="range"]::-moz-range-thumb {
     background: var(--bg-toggle-active);
     cursor: pointer;
     border: none;
-    transition: all 0.2s ease;
+    transition: all var(--duration-fast) var(--ease-default);
 }
 
 input[type="range"]::-moz-range-thumb:hover {
@@ -1135,7 +1164,7 @@ input[type="range"]::-moz-range-thumb:hover {
     font-size: 1rem;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all var(--duration-fast) var(--ease-default);
     font-family: 'Inter', sans-serif;
 }
 
@@ -1156,7 +1185,7 @@ input[type="range"]::-moz-range-thumb:hover {
     width: 100%;
     padding: var(--spacing-md) var(--spacing-lg);
     font-size: 1.1rem;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    box-shadow: var(--shadow-sm);
     border-radius: var(--radius-lg);
 }
 
@@ -1206,7 +1235,6 @@ input[type="range"]::-moz-range-thumb:hover {
 
 @media (min-width: 768px) {
     .app-container {
-        box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
         background-color: var(--bg-light);
     }
 }
@@ -1227,7 +1255,7 @@ input[type="range"]::-moz-range-thumb:hover {
 }
 
 .app-container {
-    animation: fadeIn 0.3s ease-out;
+    animation: fadeIn var(--duration-normal) var(--ease-out);
 }
 
 /* ============================================
@@ -1281,14 +1309,14 @@ input[type="range"]::-moz-range-thumb:hover {
     color: var(--white);
     padding: var(--spacing-md) var(--spacing-lg);
     border-radius: var(--radius-md);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    z-index: 9999;
+    box-shadow: var(--shadow-lg);
+    z-index: var(--z-tooltip);
     opacity: 0;
-    transition: all 0.3s ease;
+    transition: all var(--duration-normal) var(--ease-default);
     max-width: 90%;
     text-align: center;
     font-weight: 500;
-}
+    }
 
 .feedback-message.show {
     opacity: 1;
@@ -1366,8 +1394,8 @@ button[aria-busy="true"]::after {
     border: 3px solid var(--white);
     border-radius: 50%;
     border-top-color: transparent;
-    animation: spinner 0.6s linear infinite;
-}
+    animation: spinner var(--duration-spinner) linear infinite;
+    }
 
 @keyframes spinner {
     to {
@@ -1415,7 +1443,7 @@ input.color-picker[data-coloris] {
     padding: 0 !important;
     margin: 0 !important;
     cursor: pointer !important;
-    transition: border-color 0.2s ease !important;
+    transition: border-color var(--duration-fast) var(--ease-default) !important;
     /* Hide text content */
     font-size: 0 !important;
     line-height: 0 !important;
@@ -1451,7 +1479,7 @@ input.color-picker[data-coloris]:hover {
     padding: 0 !important;
     margin: 0 !important;
     cursor: pointer !important;
-    transition: border-color 0.2s ease !important;
+    transition: border-color var(--duration-fast) var(--ease-default) !important;
     position: relative !important;
     /* Hide text content */
     font-size: 0 !important;
@@ -1460,11 +1488,11 @@ input.color-picker[data-coloris]:hover {
     text-indent: -9999px !important;
     overflow: hidden !important;
     white-space: nowrap !important;
-}
+    }
 
-.clr-field button:hover {
+    .clr-field button:hover {
     border-color: var(--text-medium) !important;
-}
+    }
 
 /* Hide the actual input field when wrapped */
 .clr-field input {
@@ -1510,10 +1538,10 @@ input.color-picker[data-coloris]:hover {
     max-width: 480px;
     bottom: 0;
     background-color: var(--white);
-    z-index: 10000;
+    z-index: var(--z-modal);
     overflow-y: auto;
-    animation: slideUp 0.3s ease-out;
-}
+    animation: slideUp var(--duration-normal) var(--ease-out);
+    }
 
 @keyframes slideUp {
     from {
@@ -1531,7 +1559,7 @@ input.color-picker[data-coloris]:hover {
     background-color: var(--white);
     padding: var(--spacing-md);
     border-bottom: 2px solid var(--bg-light);
-    z-index: 100;
+    z-index: var(--z-header);
 }
 
 .btn-close {
@@ -1543,8 +1571,8 @@ input.color-picker[data-coloris]:hover {
     cursor: pointer;
     padding: var(--spacing-xs);
     color: var(--text-medium);
-    transition: color 0.2s ease;
-}
+    transition: color var(--duration-fast) var(--ease-default);
+    }
 
 .btn-close:hover {
     color: var(--text-dark);
@@ -1606,13 +1634,13 @@ input.color-picker[data-coloris]:hover {
     border: 2px solid var(--bg-light);
     border-radius: var(--radius-sm);
     background-color: var(--white);
-    transition: all 0.2s ease;
+    transition: all var(--duration-fast) var(--ease-default);
     padding: var(--spacing-xs);
-}
+    }
 
 .icon-item svg {
-    width: 36px;
-    height: 36px;
+    width: var(--icon-xl);
+    height: var(--icon-xl);
     color: var(--text-medium);
 }
 
@@ -1637,7 +1665,7 @@ input.color-picker[data-coloris]:hover {
     }
 
     .icon-item svg {
-        width: 30px;
+        width: 30px;  /* Mobile responsive adjustment to --icon-xl */
         height: 30px;
     }
 }
