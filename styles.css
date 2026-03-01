@@ -31,9 +31,6 @@
     --favourite-active: #DC143C;
     --copy-active: #4f0388;
     --color-highlight: #f0e6f7;
-    --splash-gradient: #5422b0;
-    --enter-btn: #FFD700;
-    --enter-btn-hover: #FFC107;
     --white: #FFFFFF;
     --black: #000000;
 
@@ -111,77 +108,10 @@ body {
  }
 
  #app {
-     background-color: var(--white) !important;
- }
+      background-color: var(--white) !important;
+  }
 
  /* ============================================
-    SPLASH SCREEN
-    ============================================ */
-.splash {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh;
-    background: var(--splash-gradient);
-    color: var(--white);
-    text-align: center;
-    padding: var(--spacing-xl);
-}
-
-/* Desktop: constrain splash screen to app container width */
-@media (min-width: 481px) {
-    .splash {
-        max-width: 480px;
-        margin: 0 auto;
-    }
-}
-
-.splash img {
-    width: 225px;
-    height: auto;
-    margin-bottom: var(--spacing-xl);
-    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
-}
-
-.splash h1 {
-    font-size: 2.5rem;
-    font-weight: 700;
-    margin-bottom: var(--spacing-md);
-    letter-spacing: -0.5px;
-}
-
-.splash p {
-    font-size: 1.2rem;
-    margin-bottom: var(--spacing-xl);
-    opacity: 0.95;
-}
-
-.btn-enter {
-    background-color: var(--enter-btn);
-    color: var(--text-dark);
-    border: none;
-    padding: var(--spacing-sm) var(--spacing-lg);
-    font-size: 0.95rem;
-    font-weight: 600;
-    border-radius: var(--radius-md);
-    cursor: pointer;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-    transition: all 0.3s ease;
-    font-family: 'Inter', sans-serif;
-}
-
-.btn-enter:hover {
-    background-color: var(--enter-btn-hover);
-    transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
-}
-
-.btn-enter:active {
-    transform: translateY(0);
-}
-
-/* ============================================
    MAIN APP CONTAINER
    ============================================ */
 .app-container {
@@ -353,7 +283,7 @@ body {
     cursor: pointer;
     font-size: 1rem;
     font-weight: 500;
-    border-radius: var(--radius-lg);
+    border-radius: var(--radius-md);
     transition: all 0.2s ease;
     font-family: 'Inter', sans-serif;
 }
@@ -363,10 +293,10 @@ body {
 }
 
 .variant-btn.active {
-    background-color: #555555;
+    background-color: var(--bg-toggle-active);
     color: var(--white);
     font-weight: 600;
-    border-color: #555555;
+    border-color: var(--bg-toggle-active);
 }
 
 /* ============================================
@@ -458,9 +388,9 @@ body {
 .smooth-toggle {
     width: 36px;
     height: 36px;
-    border: 1px solid var(--bg-medium);
+    border: 1px solid var(--color-border);
     background: transparent;
-    color: #555555;
+    color: var(--text-dark);
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -476,9 +406,9 @@ body {
 }
 
 .smooth-toggle.active {
-    background: #555555;
+    background: var(--bg-toggle-active);
     color: white;
-    border-color: #555555;
+    border-color: var(--bg-toggle-active);
 }
 
 .smooth-toggle.active svg {
@@ -531,7 +461,7 @@ body {
     cursor: pointer;
     font-size: 1rem;
     font-weight: 500;
-    border-radius: var(--radius-sm);
+    border-radius: var(--radius-md);
     transition: all 0.2s ease;
     font-family: 'Inter', sans-serif;
     color: var(--text-dark);
@@ -542,7 +472,7 @@ body {
 }
 
 .tab-btn.active {
-    background-color: #555555;
+    background-color: var(--bg-toggle-active);
     color: var(--white);
     font-weight: 600;
 }
@@ -575,7 +505,7 @@ body {
     /* Fix for flex item overflow on some mobile browsers */
     padding: var(--spacing-sm);
     border: 1px solid var(--color-border);
-    border-radius: var(--radius-sm);
+    border-radius: var(--radius-md);
     font-size: 0.95rem;
     font-family: 'Inter', sans-serif;
     transition: border-color 0.2s ease;
@@ -651,8 +581,8 @@ body {
     width: 100%;
     min-height: 120px;
     padding: var(--spacing-md);
-    border: 1px solid var(--bg-medium);
-    border-radius: var(--radius-sm);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
     font-size: 0.95rem;
     font-family: 'Courier New', monospace;
     resize: vertical;
@@ -661,7 +591,7 @@ body {
 
 #csv-textarea:focus {
     outline: none;
-    border-color: var(--copy-active);
+    border-color: var(--color-border-active);
 }
 
 /* Bar chart orientation controls */
@@ -887,8 +817,8 @@ body {
 .text-input-field {
     width: 100%;
     padding: var(--spacing-sm);
-    border: 1px solid var(--bg-medium);
-    border-radius: var(--radius-sm);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
     font-size: 0.95rem;
     font-family: 'Inter', sans-serif;
     margin-bottom: var(--spacing-sm);
@@ -896,12 +826,12 @@ body {
 }
 
 .text-input-field::placeholder {
-    color: #bbb;
+    color: var(--text-secondary);
 }
 
 .text-input-field:focus {
     outline: none;
-    border-color: var(--text-medium);
+    border-color: var(--color-border-active);
 }
 
 .font-control-row {
@@ -914,8 +844,8 @@ body {
 .font-select {
     flex: 1;
     padding: var(--spacing-sm);
-    border: 1px solid var(--bg-medium);
-    border-radius: var(--radius-sm);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
     font-size: 0.95rem;
     background: white;
     color: var(--text-dark);
@@ -925,6 +855,12 @@ body {
     background-position: right 8px center;
     background-size: 20px;
     padding-right: 32px;
+    transition: border-color 0.2s ease;
+}
+
+.font-select:focus {
+    outline: none;
+    border-color: var(--color-border-active);
 }
 
 .font-select option {
@@ -1126,7 +1062,7 @@ body {
     width: 100%;
     padding: var(--spacing-sm);
     border: 1px solid var(--color-border);
-    border-radius: var(--radius-sm);
+    border-radius: var(--radius-md);
     font-size: 1rem;
     font-family: 'Inter', sans-serif;
     transition: border-color 0.2s ease;
@@ -1142,12 +1078,17 @@ body {
     cursor: pointer;
 }
 
+.input-group input[type="color"]:focus {
+    outline: none;
+    border-color: var(--color-border-active);
+}
+
 /* Range Slider */
 input[type="range"] {
     width: 100%;
-    height: 4px;
+    height: 5px;
     border-radius: 2px;
-    background: #ccc;
+    background: var(--color-border);
     outline: none;
     -webkit-appearance: none;
     appearance: none;
@@ -1156,10 +1097,10 @@ input[type="range"] {
 input[type="range"]::-webkit-slider-thumb {
     -webkit-appearance: none;
     appearance: none;
-    width: 16px;
-    height: 16px;
+    width: 18px;
+    height: 18px;
     border-radius: 50%;
-    background: #555555;
+    background: var(--bg-toggle-active);
     cursor: pointer;
     transition: all 0.2s ease;
 }
@@ -1169,10 +1110,10 @@ input[type="range"]::-webkit-slider-thumb:hover {
 }
 
 input[type="range"]::-moz-range-thumb {
-    width: 16px;
-    height: 16px;
+    width: 18px;
+    height: 18px;
     border-radius: 50%;
-    background: #555555;
+    background: var(--bg-toggle-active);
     cursor: pointer;
     border: none;
     transition: all 0.2s ease;
@@ -1393,7 +1334,7 @@ button:focus-visible,
 input:focus-visible,
 textarea:focus-visible,
 details summary:focus-visible {
-    outline: 2px solid var(--copy-active);
+    outline: 2px solid var(--color-border-active);
     outline-offset: 2px;
 }
 
