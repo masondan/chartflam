@@ -458,10 +458,10 @@ function startApp() {
         </details>
 
         <!-- Style (for pie/donut/bar) -->
-        <details class="control-section" id="style-control">
-          <summary aria-expanded="false" aria-controls="style-content">Style</summary>
-          <div id="style-content" class="control-content"></div>
-        </details>
+         <details class="control-section" id="style-control">
+           <summary aria-expanded="false" aria-controls="style-content">Style & Size</summary>
+           <div id="style-content" class="control-content"></div>
+         </details>
 
         <!-- Title -->
         <details class="control-section">
@@ -1188,6 +1188,7 @@ function renderChart() {
         // Apply bar styles to all datasets (single or multi-series)
         state.chartData.datasets.forEach((dataset, index) => {
             dataset.borderRadius = state.barBorderRadius;
+            dataset.categoryPercentage = state.barCategoryPercentage;
             dataset.borderWidth = 0; // Fix for faint line artifact
             // Don't overwrite colors here - they're managed by color controls
         });
