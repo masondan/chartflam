@@ -393,7 +393,10 @@ function startApp() {
     <div class="app-container">
       <!-- Header -->
       <header class="app-header" role="banner">
-        <img src="public/icons/logo-chartflam-logotype.png" alt="ChartFlam" class="app-logo">
+        <div class="header-left">
+          <flam-nav current="chartflam"></flam-nav>
+          <img src="public/icons/logo-chartflam-logotype.png" alt="ChartFlam" class="app-logo">
+        </div>
         <nav class="chart-selector" role="tablist" aria-label="Chart type selector">
           <button class="chart-icon active" data-chart="pie" title="Pie Chart" role="tab" aria-selected="true" aria-label="Pie Chart">
             ${getSVGIcon('chartPie')}
