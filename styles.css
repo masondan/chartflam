@@ -183,7 +183,7 @@ body {
 }
 
 .app-logo {
-    height: 32px;
+    height: 26px;
     width: auto;
     transition: opacity var(--duration-fast) var(--ease-default);
 }
@@ -192,37 +192,39 @@ body {
     display: flex;
     justify-content: flex-end;
     align-items: center;
-    gap: var(--spacing-md);
+    gap: var(--spacing-sm);
 }
 
 .chart-icon {
-    width: 38px;
-    height: 38px;
+    width: 36px;
+    height: 36px;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    transition: all var(--duration-normal) var(--ease-default);
-    color: var(--text-secondary);
+    transition: background-color var(--duration-normal) var(--ease-default);
+    color: #444;
     padding: 0;
-    background-color: transparent;
-    border: 1px solid var(--color-icon-border);
+    background-color: #f0f0f0;
+    border: none;
     border-radius: var(--radius-round);
 }
 
 .chart-icon:hover {
-    color: var(--color-icon-border);
-    transform: scale(1.05);
+    background-color: #e4e4e4;
 }
 
 .chart-icon.active {
     background-color: var(--color-icon-active-bg);
     color: var(--color-icon-active-text);
-    border-color: var(--color-icon-active-bg);
 }
 
 .chart-icon.active img {
     filter: brightness(0) invert(1);
+}
+
+.chart-icon:not(.active) img {
+    filter: brightness(0) saturate(100%) invert(25%) sepia(0%) saturate(0%) brightness(100%) contrast(90%);
 }
 
 .chart-icon img {
@@ -238,7 +240,7 @@ body {
     }
 
     .app-logo {
-        height: 32px !important;
+        height: 26px !important;
     }
 
     .chart-selector {
@@ -246,16 +248,14 @@ body {
     }
 
     .chart-icon {
-        width: 36px !important;
-        height: 36px !important;
-        border: 1px solid var(--color-icon-border) !important;
-        border-radius: var(--radius-round) !important;
+        width: 34px !important;
+        height: 34px !important;
     }
 
     .chart-icon img,
     .chart-icon svg {
-        width: 19px !important;  /* Mobile responsive adjustment to --icon-base */
-        height: 19px !important;
+        width: 18px !important;
+        height: 18px !important;
     }
 }
 

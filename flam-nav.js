@@ -31,10 +31,31 @@ class FlamNav extends HTMLElement {
 		this._open ? this.close() : this.open();
 	}
 
+	_getAppContainer() {
+		let el = this.closest('.app-container, .app, .page, [class*="max-w"]');
+		if (!el) {
+			el = this.closest('[style*="max-width"]');
+		}
+		return el;
+	}
+
 	open() {
 		this._open = true;
 		const drawer = this.shadowRoot.querySelector('.drawer');
 		const overlay = this.shadowRoot.querySelector('.overlay');
+		const container = this._getAppContainer();
+
+		if (container) {
+			const rect = container.getBoundingClientRect();
+			drawer.style.left = rect.left + 'px';
+			drawer.style.top = rect.top + 'px';
+			drawer.style.bottom = (window.innerHeight - rect.bottom) + 'px';
+			overlay.style.left = rect.left + 'px';
+			overlay.style.width = rect.width + 'px';
+			overlay.style.top = rect.top + 'px';
+			overlay.style.bottom = (window.innerHeight - rect.bottom) + 'px';
+		}
+
 		drawer.classList.add('open');
 		overlay.classList.add('open');
 		document.addEventListener('keydown', this._onKeyDown);
@@ -56,8 +77,8 @@ class FlamNav extends HTMLElement {
 			{ id: 'audioflam', name: 'AudioFlam', url: 'https://audioflam.flamtools.com' },
 			{ id: 'chartflam', name: 'ChartFlam', url: 'https://chartflam.flamtools.com' },
 			{ id: 'mapflam', name: 'MapFlam', url: 'https://mapflam.flamtools.com' },
-			{ id: 'storyflam', name: 'StoryFlam', url: 'https://storyflam.flamtools.com' },
-			{ id: 'flamit', name: 'FlamIt', url: 'https://flamit.flamtools.com' }
+			{ id: 'storyflam', name: 'StoryFlam', url: 'https://storyflam.flamtools.com', training: true },
+			{ id: 'flamit', name: 'FlamIt', url: 'https://flamit.flamtools.com', training: true }
 		];
 
 		const current = this.current;
@@ -77,7 +98,7 @@ class FlamNav extends HTMLElement {
 					background: transparent;
 					cursor: pointer;
 					padding: 0;
-					color: #555;
+					color: inherit;
 					transition: color 150ms ease;
 				}
 
@@ -110,7 +131,7 @@ class FlamNav extends HTMLElement {
 					top: 0;
 					left: 0;
 					bottom: 0;
-					width: 220px;
+					width: 180px;
 					background: #fff;
 					z-index: 9999;
 					transform: translateX(-100%);
@@ -158,7 +179,7 @@ class FlamNav extends HTMLElement {
 					padding: 10px 16px;
 					text-decoration: none;
 					font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-					font-size: 14px;
+					font-size: 15px;
 					font-weight: 450;
 					color: #333;
 					transition: background-color 150ms ease;
@@ -172,6 +193,14 @@ class FlamNav extends HTMLElement {
 					color: #5422b0;
 					font-weight: 600;
 					background-color: #f0e6f7;
+				}
+
+				.drawer-list li a.training {
+					color: #999;
+				}
+
+				.drawer-list li a.training.current {
+					color: #5422b0;
 				}
 
 				.drawer-list li.separator {
@@ -201,8 +230,9 @@ class FlamNav extends HTMLElement {
 				<ul class="drawer-list">
 					${apps.map((app, i) => {
 						const isCurrent = app.id === current;
-						const separator = i === 4 ? '<li class="separator"></li>' : '';
-						return `${separator}<li><a href="${app.url}"${isCurrent ? ' class="current"' : ''}>${app.name}</a></li>`;
+						const classes = [isCurrent ? 'current' : '', app.training ? 'training' : ''].filter(Boolean).join(' ');
+						const separator = i === 5 ? '<li class="separator"></li>' : '';
+						return `${separator}<li><a href="${app.url}"${classes ? ` class="${classes}"` : ''}>${app.name}</a></li>`;
 					}).join('')}
 				</ul>
 			</div>
