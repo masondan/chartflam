@@ -73,19 +73,16 @@ class FlamNav extends HTMLElement {
 					display: flex;
 					align-items: center;
 					justify-content: center;
-					width: 38px;
-					height: 38px;
 					border: none;
-					border-radius: 50%;
 					background: transparent;
 					cursor: pointer;
 					padding: 0;
 					color: #555;
-					transition: background-color 150ms ease;
+					transition: color 150ms ease;
 				}
 
 				.menu-btn:hover {
-					background-color: rgba(0, 0, 0, 0.06);
+					color: #5422b0;
 				}
 
 				.menu-btn svg {
