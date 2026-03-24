@@ -4,6 +4,7 @@
   "description": "Mobile-first web app for creating simple charts, including pie, bar and line charts, and pictgrams.",
   "start_url": "/",
   "display": "standalone",
+  "scope": "/",
   "background_color": "#5422b0",
   "theme_color": "#5422b0",
   "icons": [

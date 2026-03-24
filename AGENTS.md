@@ -97,6 +97,30 @@ All application state is stored in a single centralized `state` object (`app.js`
 
 ---
 
+## Manifest & PWA Configuration
+
+**Status**: ✅ Configured per FlamTools standard
+
+- **Manifest location**: `manifest.json` (root)
+- **Display mode**: `standalone` (removes browser chrome when installed)
+- **Scope**: `/`
+- **Theme & background colors**: Both `#5422b0`
+- **Icons**: 
+  - 192px (any purpose)
+  - 512px (any purpose)
+  - 512px maskable (adaptive icons on Android)
+  - Paths: `public/chartflam-icon-{192,512}.png`, `public/chartflam-icon-maskable.png`
+
+**Meta tags** (in `<head>`):
+- `theme-color`: `#5422B0`
+- `robots`: `noindex, nofollow` (non-commercial/training tool)
+- Open Graph: `og:title`, `og:description`, `og:image` (absolute URL)
+- Twitter: `twitter:card`, `twitter:title`, `twitter:image`
+
+**Icon paths**: Relative to domain root (`https://chartflam.flamtools.com/public/icons/...`)
+
+---
+
 ## Known Issues & Technical Debt
 
 ### Critical (Remove Before Production Polish)
